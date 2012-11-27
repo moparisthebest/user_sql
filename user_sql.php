@@ -31,6 +31,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         protected $sql_table;
         protected $sql_column_username;
         protected $sql_column_password;
+        protected $sql_column_active;
         protected $sql_type;
         protected $db_conn;
         protected $db;
@@ -44,6 +45,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             $this->sql_table = OCP\Config::getAppValue('user_sql', 'sql_table', '');
             $this->sql_column_username = OCP\Config::getAppValue('user_sql', 'sql_column_username', '');
             $this->sql_column_password = OCP\Config::getAppValue('user_sql', 'sql_column_password', '');
+            $this->sql_column_active = OCP\Config::getAppValue('user_sql', 'sql_column_active', '');
             $this->sql_type = OCP\Config::getAppValue('user_sql', 'sql_type', '');
             $dsn = $this->sql_type.":host=".$this->sql_host.";dbname=".$this->sql_database;
             try 
@@ -95,7 +97,9 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
                 return false;
             }
             
-		    $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = '$uid';";
+		    $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = '$uid'";
+		    if($this->sql_column_active != '')
+		        $query .= " AND $this->sql_column_active = 1";
 		    $result = $this->db->prepare($query);
 		    if(!$result->execute())
 		    {
@@ -132,6 +136,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 		   $query = "SELECT $this->sql_column_username FROM $this->sql_table";
 		   if($search != '')
 		      $query .= " WHERE $this->sql_column_username LIKE '%$search%'";
+		    if($this->sql_column_active != '')
+		        $query .= " AND $this->sql_column_active = 1";		      
 		   if($limit != null)
 		      $query .= " LIMIT $limit";
 		   if($offset != null)
@@ -161,7 +167,9 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
                 return false;
             }
             
-		    $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = '$uid';";
+		    $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = '$uid'";
+  		    if($this->sql_column_active != '')
+		        $query .= " AND $this->sql_column_active = 1";
 		    $result = $this->db->prepare($query);
 		    if(!$result->execute())
 		    {

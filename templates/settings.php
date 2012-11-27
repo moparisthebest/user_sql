@@ -23,6 +23,7 @@
             <p><label for="sql_table"><?php echo $l->t('Table');?></label><input type="text" id="sql_table" name="sql_table" value="<?php echo $_['sql_table']; ?>" /></p>
             <p><label for="sql_column_username"><?php echo $l->t('Username Column');?></label><input type="text" id="sql_column_username" name="sql_column_username" value="<?php echo $_['sql_column_username']; ?>" /></p>
             <p><label for="sql_column_password"><?php echo $l->t('Password Column');?></label><input type="text" id="sql_column_password" name="sql_column_password" value="<?php echo $_['sql_column_password']; ?>" /></p>
+            <p><label for="sql_column_active"><?php echo $l->t('User Active Column');?></label><input type="text" id="sql_column_active" name="sql_column_active" value="<?php echo $_['sql_column_active']; ?>" /></p>
 
         <input type="submit" value="<?php echo $l->t('Save'); ?>" />
     </fieldset>

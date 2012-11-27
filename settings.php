@@ -20,7 +20,7 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-$params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 'sql_table', 'sql_column_username', 'sql_column_password', 'sql_type');
+$params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 'sql_table', 'sql_column_username', 'sql_column_password', 'sql_type', 'sql_column_active');
 
 OCP\Util::addscript('user_sql', 'settings');
 
@@ -48,5 +48,6 @@ $tmpl->assign( 'sql_table', OCP\Config::getAppValue( 'user_sql', 'sql_table', OC
 $tmpl->assign( 'sql_column_password', OCP\Config::getAppValue( 'user_sql', 'sql_column_password', OC_USER_BACKEND_SQL_DEFAULT_PW_COLUMN));
 $tmpl->assign( 'sql_column_username', OCP\Config::getAppValue( 'user_sql', 'sql_column_username', OC_USER_BACKEND_SQL_DEFAULT_USER_COLUMN));
 $tmpl->assign( 'sql_type', OCP\Config::getAppValue( 'user_sql', 'sql_type', OC_USER_BACKEND_SQL_DEFAULT_DRIVER));
+$tmpl->assign( 'sql_column_active', OCP\Config::getAppValue( 'user_sql', 'sql_column_active', ''));
 
 return $tmpl->fetchPage();
