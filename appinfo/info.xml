@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<info>
+       <id>user_sql</id>
+       <name>SQL user backend</name>
+       <description>Authenticate Users by SQL</description>
+       <licence>AGPL</licence>
+       <author>Andreas Boehler &lt;andreas.boehler@pmu.ac.at&gt;</author>
+       <require>4.5</require>
+       <shipped>false</shipped>
+       <types>
+       		<authentication/>
+       </types>
+</info>
