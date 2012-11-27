@@ -31,16 +31,32 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         protected $sql_table;
         protected $sql_column_username;
         protected $sql_column_password;
+        protected $sql_type;
+        protected $db_conn;
+        protected $db;
 
-       public function __construct() {
-                $this->sql_host = OCP\Config::getAppValue('user_sql', 'sql_host', '');
-                $this->sql_username = OCP\Config::getAppValue('user_sql', 'sql_user', '');
-                $this->sql_database = OCP\Config::getAppValue('user_sql', 'sql_database', '');
-                $this->sql_password = OCP\Config::getAppValue('user_sql', 'sql_password', '');
-                $this->sql_table = OCP\Config::getAppValue('user_sql', 'sql_table', '');
-                $this->sql_column_username = OCP\Config::getAppValue('user_sql', 'sql_column_username', '');
-                $this->sql_column_password = OCP\Config::getAppValue('user_sql', 'sql_column_password', '');
-       }
+        public function __construct() {
+            $this->db_conn = false;
+            $this->sql_host = OCP\Config::getAppValue('user_sql', 'sql_host', '');
+            $this->sql_username = OCP\Config::getAppValue('user_sql', 'sql_user', '');
+            $this->sql_database = OCP\Config::getAppValue('user_sql', 'sql_database', '');
+            $this->sql_password = OCP\Config::getAppValue('user_sql', 'sql_password', '');
+            $this->sql_table = OCP\Config::getAppValue('user_sql', 'sql_table', '');
+            $this->sql_column_username = OCP\Config::getAppValue('user_sql', 'sql_column_username', '');
+            $this->sql_column_password = OCP\Config::getAppValue('user_sql', 'sql_column_password', '');
+            $this->sql_type = OCP\Config::getAppValue('user_sql', 'sql_type', '');
+            $dsn = $this->sql_type.":host=".$this->sql_host.";dbname=".$this->sql_database;
+            try 
+            {
+                $this->db = new PDO($dsn, $this->sql_username, $this->sql_password);
+                $this->db_conn = true;
+            }
+            catch (PDOException $e) 
+            {
+                OC_Log::write('OC_USER_SQL', 'OC_USER_SQL, Failed to connect to the database: ' . $e->getMessage(), OC_Log::ERROR);
+            }
+            return false;
+        }
 
 	    public function implementsAction($actions) {
 		    return (bool)((OC_USER_BACKEND_CHECK_PASSWORD) & $actions);
@@ -48,19 +64,19 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
 	    public function createUser() {
             // Can't create user
-            OC_Log::write('OC_USER_SQL', 'Not possible to create local users from web frontend using SQL user backend',3);
+            OC_Log::write('OC_USER_SQL', 'Not possible to create local users from web frontend using SQL user backend', OC_Log::Error);
             return false;
         }
 
         public function deleteUser( $uid ) {
             // Can't delete user
-            OC_Log::write('OC_USER_SQL', 'Not possible to delete local users from web frontend using SQL user backend',3);
+            OC_Log::write('OC_USER_SQL', 'Not possible to delete local users from web frontend using SQL user backend', OC_Log::Error);
             return false;
         }
 
         public function setPassword ( $uid, $password ) {
             // We can't change user password
-            OC_Log::write('OC_USER_SQL', 'Not possible to change password for local users from web frontend using SQL user backend',3);
+            OC_Log::write('OC_USER_SQL', 'Not possible to change password for local users from web frontend using SQL user backend', OC_Log::Error);
             return false;
         }
 
@@ -72,32 +88,25 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         *
         * Check if the password is correct without logging in the user
         */
-       public function checkPassword($uid, $password){
-           $db = mysqli_connect ($this->sql_host, $this->sql_username, $this->sql_password);
-           if ($db) 
-           {
-               $success = mysqli_select_db ($db, $this->sql_database);
-               if(!$success)
-               {
+       public function checkPassword($uid, $password)
+       {
+            if(!$this->db_conn)
+            {
                 return false;
-               }
-           }
-           else
-           {
-            return false;
-           }
+            }
+            
 		    $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = '$uid';";
-		    $result = mysqli_query($db, $query);
-		    if(!$result)
+		    $result = $this->db->prepare($query);
+		    if(!$result->execute())
 		    {
 		        return false;
 		    }
-		    if(mysqli_num_rows($result) == 0)
+		    $row = $result->fetch();
+		    if(!$row)
 		    {
 		        return false;
 		    }
-		    $row = mysqli_fetch_row($result);
-		    if(crypt($password, $row[1]) == $row[1])
+		    if(crypt($password, $row[$this->sql_column_password]) == $row[$this->sql_column_password])
 		    {
 		        return $uid;
 		    }
@@ -116,16 +125,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
        public function getUsers($search = '', $limit = null, $offset = null){
            $users = array();
-           $db = mysqli_connect ($this->sql_host, $this->sql_username, $this->sql_password);
-           if ($db) 
-           {
-               $success = mysqli_select_db ($db, $this->sql_database);
-               if(!$success)
-               {
-                return false;
-               }
-           }
-           else
+           if(!$this->db_conn)
            {
             return false;
            }
@@ -136,18 +136,14 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 		      $query .= " LIMIT $limit";
 		   if($offset != null)
 		      $query .= " OFFSET $offset";
-		   $result = mysqli_query($db, $query);
-		   if(!$result)
+		   $result = $this->db->prepare($query);
+		   if(!$result->execute())
 		   {
 		    return array();
 		   }
-		   if(mysqli_num_rows($result) == 0)
+		   while($row = $result->fetch())
 		   {
-		    return array();
-		   }
-		   while($row = mysqli_fetch_row($result))
-		   {
-		       $users[] = $row[0];
+		       $users[] = $row[$this->sql_column_username];
 		   }
            return $users;
        }
@@ -160,32 +156,26 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
        public function userExists($uid)
        {
-           $db = mysqli_connect ($this->sql_host, $this->sql_username, $this->sql_password);
-           if ($db) 
-           {
-               $success = mysqli_select_db ($db, $this->sql_database);
-               if(!$success)
-               {
+            if(!$this->db_conn)
+            {
                 return false;
-               }
+            }
+            
 		    $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = '$uid';";
-		    $result = mysqli_query($db, $query);
-		    if(!$result)
+		    $result = $this->db->prepare($query);
+		    if(!$result->execute())
 		    {
 		        return false;
 		    }
-		    if(mysqli_num_rows($result) == 0)
-		    {
+            $row = $result->fetch();
+            if(!$row)
+            {
 		        return false;
-		    }
-		    return true;
-               
-               
-           }
-           else
-           {
-            return false;
-           }
+            }
+            else
+            {
+                return true;
+            }
 
        }
 

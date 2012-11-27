@@ -33,6 +33,7 @@ define('OC_USER_BACKEND_SQL_DEFAULT_PASSWORD', 'password');
 define('OC_USER_BACKEND_SQL_DEFAULT_TABLE', 'users');
 define('OC_USER_BACKEND_SQL_DEFAULT_PW_COLUMN', 'password');
 define('OC_USER_BACKEND_SQL_DEFAULT_USER_COLUMN', 'username');
+define('OC_USER_BACKEND_SQL_DEFAULT_DRIVER', 'mysql');
 
 // register user backend
 OC_User::registerBackend('SQL');
