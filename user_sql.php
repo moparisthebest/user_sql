@@ -137,7 +137,13 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 		   if($search != '')
 		      $query .= " WHERE $this->sql_column_username LIKE '%$search%'";
 		    if($this->sql_column_active != '')
-		        $query .= " AND $this->sql_column_active = 1";		      
+		    {
+		        if($search != '')
+		            $query .= " AND";
+		        else
+		            $query .= " WHERE";
+		        $query .= " $this->sql_column_active = 1";
+		    }
 		   if($limit != null)
 		      $query .= " LIMIT $limit";
 		   if($offset != null)
