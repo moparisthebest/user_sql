@@ -66,19 +66,19 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
 	    public function createUser() {
             // Can't create user
-            OC_Log::write('OC_USER_SQL', 'Not possible to create local users from web frontend using SQL user backend', OC_Log::Error);
+            OC_Log::write('OC_USER_SQL', 'Not possible to create local users from web frontend using SQL user backend', OC_Log::ERROR);
             return false;
         }
 
         public function deleteUser( $uid ) {
             // Can't delete user
-            OC_Log::write('OC_USER_SQL', 'Not possible to delete local users from web frontend using SQL user backend', OC_Log::Error);
+            OC_Log::write('OC_USER_SQL', 'Not possible to delete local users from web frontend using SQL user backend', OC_Log::ERROR);
             return false;
         }
 
         public function setPassword ( $uid, $password ) {
             // We can't change user password
-            OC_Log::write('OC_USER_SQL', 'Not possible to change password for local users from web frontend using SQL user backend', OC_Log::Error);
+            OC_Log::write('OC_USER_SQL', 'Not possible to change password for local users from web frontend using SQL user backend', OC_Log::ERROR);
             return false;
         }
 
