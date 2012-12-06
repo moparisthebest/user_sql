@@ -20,16 +20,21 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-$params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 'sql_table', 'sql_column_username', 'sql_column_password', 'sql_type', 'sql_column_active');
+$params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 'sql_table', 'sql_column_username', 'sql_column_password', 'sql_type', 'sql_column_active', 'strip_domain', 'default_domain');
 
 OCP\Util::addscript('user_sql', 'settings');
 
 if ($_POST) {
-       foreach($params as $param){
-               if(isset($_POST[$param])){
-                       OCP\Config::setAppValue('user_sql', $param, $_POST[$param]);
-               }
-       }
+    foreach($params as $param){
+        if(isset($_POST[$param]))
+        {
+            OCP\Config::setAppValue('user_sql', $param, $_POST[$param]);
+        }
+        elseif($param == 'strip_domain')
+        {
+            OCP\Config::setAppValue('user_sql', $param, 0);
+        }
+    }
 }
 
 // fill template
@@ -49,5 +54,7 @@ $tmpl->assign( 'sql_column_password', OCP\Config::getAppValue( 'user_sql', 'sql_
 $tmpl->assign( 'sql_column_username', OCP\Config::getAppValue( 'user_sql', 'sql_column_username', OC_USER_BACKEND_SQL_DEFAULT_USER_COLUMN));
 $tmpl->assign( 'sql_type', OCP\Config::getAppValue( 'user_sql', 'sql_type', OC_USER_BACKEND_SQL_DEFAULT_DRIVER));
 $tmpl->assign( 'sql_column_active', OCP\Config::getAppValue( 'user_sql', 'sql_column_active', ''));
+$tmpl->assign( 'strip_domain', OCP\Config::getAppValue( 'user_sql', 'strip_domain', 0));
+$tmpl->assign( 'default_domain', OCP\Config::getAppValue( 'user_sql', 'default_domain', ''));
 
 return $tmpl->fetchPage();

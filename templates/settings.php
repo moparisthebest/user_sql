@@ -24,6 +24,8 @@
             <p><label for="sql_column_username"><?php echo $l->t('Username Column');?></label><input type="text" id="sql_column_username" name="sql_column_username" value="<?php echo $_['sql_column_username']; ?>" /></p>
             <p><label for="sql_column_password"><?php echo $l->t('Password Column');?></label><input type="text" id="sql_column_password" name="sql_column_password" value="<?php echo $_['sql_column_password']; ?>" /></p>
             <p><label for="sql_column_active"><?php echo $l->t('User Active Column');?></label><input type="text" id="sql_column_active" name="sql_column_active" value="<?php echo $_['sql_column_active']; ?>" /></p>
+            <p><label for="strip_domain"><?php echo $l->t('Strip Domain Part from Username');?></label><input type="checkbox" id="strip_domain" name="strip_domain" value="1"<?php if($_['strip_domain']) echo ' checked'; ?> title="Strip Domain Part from Username when logging in and retrieving username lists"></p>
+            <p><label for="default_domain"><?php echo $l->t('Add default domain to Usernames');?></label><input type="text" id="default_domain" name="default_domain" value="<?php echo $_['default_domain']; ?>" /></p>
 
         <input type="submit" value="<?php echo $l->t('Save'); ?>" />
     </fieldset>
