@@ -81,12 +81,12 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
         public function setPassword ( $uid, $password ) {
             // Update the user's password - this might affect other services, that user the same database, as well
-            if(!this->db_conn)
+            if(!$this->db_conn)
             {
                 return false;
             }
             
-            $query = "UPDATE $this->sql_table SET $this->sql_column_password = ENCRYPT('$password') WHERE $sql_column_username = '$uid'";
+            $query = "UPDATE $this->sql_table SET $this->sql_column_password = ENCRYPT('$password') WHERE $this->sql_column_username = '$uid'";
             $result = $this->db->prepare($query);
             if(!$result->execute())
             {
