@@ -36,7 +36,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         protected $db_conn;
         protected $db;
 
-        public function __construct() {
+        public function __construct() 
+        {
             $this->db_conn = false;
             $this->sql_host = OCP\Config::getAppValue('user_sql', 'sql_host', '');
             $this->sql_username = OCP\Config::getAppValue('user_sql', 'sql_user', '');
@@ -60,7 +61,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             return false;
         }
 
-	    public function implementsAction($actions) {
+	    public function implementsAction($actions) 
+	    {
 		    return (bool)((OC_USER_BACKEND_CHECK_PASSWORD) & $actions);
 	    }
 
@@ -70,16 +72,27 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             return false;
         }
 
-        public function deleteUser( $uid ) {
+        public function deleteUser( $uid ) 
+        {
             // Can't delete user
             OC_Log::write('OC_USER_SQL', 'Not possible to delete local users from web frontend using SQL user backend', OC_Log::ERROR);
             return false;
         }
 
         public function setPassword ( $uid, $password ) {
-            // We can't change user password
-            OC_Log::write('OC_USER_SQL', 'Not possible to change password for local users from web frontend using SQL user backend', OC_Log::ERROR);
-            return false;
+            // Update the user's password - this might affect other services, that user the same database, as well
+            if(!this->db_conn)
+            {
+                return false;
+            }
+            
+            $query = "UPDATE $this->sql_table SET $this->sql_column_password = ENCRYPT('$password') WHERE $sql_column_username = '$uid'";
+            $result = $this->db->prepare($query);
+            if(!$result->execute())
+            {
+                return false;
+            }
+            return true;
         }
 
        /**
@@ -127,7 +140,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         * Get a list of all users.
         */
 
-       public function getUsers($search = '', $limit = null, $offset = null){
+       public function getUsers($search = '', $limit = null, $offset = null)
+       {
            $users = array();
            if(!$this->db_conn)
            {
