@@ -20,7 +20,7 @@
  * License along with this library.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-$params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 'sql_table', 'sql_column_username', 'sql_column_password', 'sql_type', 'sql_column_active', 'strip_domain', 'default_domain');
+$params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 'sql_table', 'sql_column_username', 'sql_column_password', 'sql_type', 'sql_column_active', 'strip_domain', 'default_domain', 'crypt_type');
 
 OCP\Util::addscript('user_sql', 'settings');
 
@@ -56,5 +56,6 @@ $tmpl->assign( 'sql_type', OCP\Config::getAppValue( 'user_sql', 'sql_type', OC_U
 $tmpl->assign( 'sql_column_active', OCP\Config::getAppValue( 'user_sql', 'sql_column_active', ''));
 $tmpl->assign( 'strip_domain', OCP\Config::getAppValue( 'user_sql', 'strip_domain', 0));
 $tmpl->assign( 'default_domain', OCP\Config::getAppValue( 'user_sql', 'default_domain', ''));
+$tmpl->assign( 'crypt_type', OCP\Config::getAppValue( 'user_sql', 'crypt_type', 'mysql_encrypt'));
 
 return $tmpl->fetchPage();
