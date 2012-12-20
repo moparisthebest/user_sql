@@ -113,7 +113,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             return false;
         }
         $old_password = $row[$this->sql_column_password];
-        $enc_password = pacrypt($password, $old_password);
+        $enc_password = $this->pacrypt($password, $old_password);
         $query = "UPDATE $this->sql_table SET $this->sql_column_password = :enc_password WHERE $this->sql_column_username = :uid";
         OC_Log::write('OC_USER_SQL', "Preapring query: $query", OC_Log::DEBUG);
         $result = $this->db->prepare($query);
@@ -380,7 +380,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
     // Call: md5crypt (string cleartextpassword)
     //
 
-    function md5crypt ($pw, $salt="", $magic="")
+    private function md5crypt ($pw, $salt="", $magic="")
     {
         $MAGIC = "$1$";
 
@@ -391,7 +391,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
         $salt = substr ($salt, 0, 8);
         $ctx = $pw . $magic . $salt;
-        $final = $this->hex2bin (md5 ($pw . $salt . $pw));
+        $final = $this->pahex2bin (md5 ($pw . $salt . $pw));
 
         for ($i=strlen ($pw); $i>0; $i-=16)
         {
@@ -412,7 +412,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             else $ctx .= $pw[0];
             $i = $i >> 1;
         }
-        $final = $this->hex2bin (md5 ($ctx));
+        $final = $this->pahex2bin (md5 ($ctx));
 
         for ($i=0;$i<1000;$i++)
         {
@@ -435,7 +435,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             {
                 $ctx1 .= $pw;
             }
-            $final = $this->hex2bin (md5 ($ctx1));
+            $final = $this->pahex2bin (md5 ($ctx1));
         }
         $passwd = "";
         $passwd .= $this->to64 (((ord ($final[0]) << 16) | (ord ($final[6]) << 8) | (ord ($final[12]))), 4);
@@ -447,14 +447,33 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         return "$magic$salt\$$passwd";
     }
 
-    function create_salt ()
+    private function create_salt ()
     {
         srand ((double) microtime ()*1000000);
         $salt = substr (md5 (rand (0,9999999)), 0, 8);
         return $salt;
     }
+    
+    private function pahex2bin ($str)
+    {
+        if(function_exists('hex2bin'))
+        {
+            return hex2bin($str);
+        }
+        else
+        {
+            $len = strlen ($str);
+            $nstr = "";
+            for ($i=0;$i<$len;$i+=2)
+            {
+                $num = sscanf (substr ($str,$i,2), "%x");
+                $nstr.=chr ($num[0]);
+            }
+            return $nstr;
+        }
+    }
 
-    function to64 ($v, $n)
+    private function to64 ($v, $n)
     {
         $ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         $ret = "";
