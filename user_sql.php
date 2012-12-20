@@ -62,7 +62,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         }
         catch (PDOException $e) 
         {
-            OC_Log::write('OC_USER_SQL', 'OC_USER_SQL, Failed to connect to the database: ' . $e->getMessage(), OC_Log::ERROR);
+            OC_Log::write('OC_USER_SQL', 'Failed to connect to the database: ' . $e->getMessage(), OC_Log::ERROR);
         }
         return false;
     }
@@ -87,20 +87,26 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
     public function setPassword ( $uid, $password ) {
         // Update the user's password - this might affect other services, that user the same database, as well
+        OC_Log::write('OC_USER_SQL', "Entering setPassword for UID: $uid", OC_Log::DEBUG);
         if(!$this->db_conn)
         {
             return false;
         }
-        if($this->strip_domain)
+        $uid = trim($uid);
+        if($this->default_domain && (strpos($uid, '@') === false))
         {
             $uid .= "@".$this->default_domain;
         }
-        $query = "SELECT $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = '$uid'";
+        $query = "SELECT $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
+        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this->db->prepare($query);
+        $result->bindParam(":uid", $uid);
+        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
         if(!$result->execute())
         {
             return false;
         }
+        OC_Log::write('OC_USER_SQL', "Fetching result...", OC_Log::DEBUG);
         $row = $result->fetch();
         if(!$row)
         {
@@ -108,12 +114,18 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         }
         $old_password = $row[$this->sql_column_password];
         $enc_password = pacrypt($password, $old_password);
-        $query = "UPDATE $this->sql_table SET $this->sql_column_password = '$enc_password' WHERE $this->sql_column_username = '$uid'";
+        $query = "UPDATE $this->sql_table SET $this->sql_column_password = :enc_password WHERE $this->sql_column_username = :uid";
+        OC_Log::write('OC_USER_SQL', "Preapring query: $query", OC_Log::DEBUG);
         $result = $this->db->prepare($query);
+        $result->bindParam(":enc_password", $enc_password);
+        $result->bindParam(":uid", $uid);
+        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
         if(!$result->execute())
         {
+            OC_Log::write('OC_USER_SQL', "Could not update password!", OC_Log::ERROR);
             return false;
         }
+        OC_Log::write('OC_USER_SQL', "Updated password successfully, return true", OC_Log::DEBUG);
         return true;
     }
 
@@ -127,35 +139,44 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
     */
     public function checkPassword($uid, $password)
     {
+        OC_Log::write('OC_USER_SQL', "Entering checkPassword() for UID: $uid", OC_Log::DEBUG);
         if(!$this->db_conn)
         {
             return false;
         }
-        $suid = $uid;
-        if($this->strip_domain)
+        $suid = trim($uid);
+        if($this->default_domain && (strpos($uid, '@') === false))
         {
-            $suid = $uid."@".$this->default_domain;
+            $suid .= "@".$this->default_domain;
         }
         
-        $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = '$suid'";
+        $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this->sql_column_active != '')
             $query .= " AND $this->sql_column_active = 1";
+        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this->db->prepare($query);
+        $result->bindParam(":uid", $suid);
+        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
         if(!$result->execute())
         {
             return false;
         }
+        OC_Log::write('OC_USER_SQL', "Fetching row...", OC_Log::DEBUG);
         $row = $result->fetch();
         if(!$row)
         {
+            OC_Log::write('OC_USER_SQL', "Got no row, return false", OC_Log::DEBUG);
             return false;
         }
+        OC_Log::write('OC_USER_SQL', "Encrypting and checking password", OC_Log::DEBUG);
         if($this->pacrypt($password, $row[$this->sql_column_password]) == $row[$this->sql_column_password])
         {
+            OC_Log::write('OC_USER_SQL', "Passwords matching, return true", OC_Log::DEBUG);
             return $uid;
         }
         else
         {
+            OC_Log::write('OC_USER_SQL', "Passwords do not match, return false", OC_Log::DEBUG);
             return false;
         }
     }
@@ -169,6 +190,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
     public function getUsers($search = '', $limit = null, $offset = null)
     {
+       OC_Log::write('OC_USER_SQL', "Entering getUsers() with Search: $search", OC_Log::DEBUG);
        $users = array();
        if(!$this->db_conn)
        {
@@ -176,7 +198,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
        }
        $query = "SELECT $this->sql_column_username FROM $this->sql_table";
        if($search != '')
-          $query .= " WHERE $this->sql_column_username LIKE '%$search%'";
+          $query .= " WHERE $this->sql_column_username LIKE :search";
         if($this->sql_column_active != '')
         {
             if($search != '')
@@ -186,14 +208,23 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             $query .= " $this->sql_column_active = 1";
         }
        if($limit != null)
-          $query .= " LIMIT $limit";
+          $query .= " LIMIT :limit";
        if($offset != null)
-          $query .= " OFFSET $offset";
+          $query .= " OFFSET :offset";
+       OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
        $result = $this->db->prepare($query);
+       if($search != '')
+          $result->bindParam(":search", "%$search%");
+       if($limit != null)
+           $result->bindParam(":limit", $limit);
+       if($offset != null)
+           $result->bindParam(":offset", $offset);
+       OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
        if(!$result->execute())
        {
         return array();
        }
+       OC_Log::write('OC_USER_SQL', "Fetchin results...", OC_Log::DEBUG);
        while($row = $result->fetch())
        {
            $uid = $row[$this->sql_column_username];
@@ -204,6 +235,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
            }
            $users[] = $uid;
        }
+       OC_Log::write('OC_USER_SQL', "Return list of results", OC_Log::DEBUG);
        return $users;
     }
 
@@ -215,31 +247,38 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
     public function userExists($uid)
     {
+        OC_Log::write('OC_USER_SQL', "Entering userExists() for UID: $uid", OC_Log::DEBUG);
         if(!$this->db_conn)
         {
             return false;
         }
         
-        if($this->strip_domain)
+        if($this->default_domain && (strpos($uid, '@') === false))
         {
             $uid .= "@".$this->default_domain;
         }            
         
-        $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = '$uid'";
+        $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this->sql_column_active != '')
             $query .= " AND $this->sql_column_active = 1";
+        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this->db->prepare($query);
+        $result->bindParam(":uid", $uid);
+        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
         if(!$result->execute())
         {
             return false;
         }
+        OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
         $row = $result->fetch();
         if(!$row)
         {
+            OC_Log::write('OC_USER_SQL', "Empty row, user does not exists, return false", OC_Log::DEBUG);
             return false;
         }
         else
         {
+            OC_Log::write('OC_USER_SQL', "User exists, return true", OC_Log::DEBUG);
             return true;
         }
 
@@ -259,6 +298,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
      */
     private function pacrypt ($pw, $pw_db="")
     {
+        OC_Log::write('OC_USER_SQL', "Entering private pacrypt()", OC_Log::DEBUG);
         $pw = stripslashes($pw);
         $password = "";
         $salt = "";
@@ -299,18 +339,21 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         // this is apparently useful for pam_mysql etc.
         elseif ($this->crypt_type == 'mysql_encrypt')
         {
-            if ($pw_db!="") {
-                $salt=substr($pw_db,0,2);
-                $query = "SELECT ENCRYPT('".$pw."','".$salt."');";
-            } else {
-                $query = "SELECT ENCRYPT('".$pw."');";
-            }
-
             if(!$this->db_conn)
             {
                 return false;
+            }        
+            if ($pw_db!="") {
+                $salt=substr($pw_db,0,2);
+                $query = "SELECT ENCRYPT(:pw, :salt);";
+            } else {
+                $query = "SELECT ENCRYPT(:pw);";
             }
+
             $result = $this->db->prepare($query);
+            $result->bindParam(":pw", $pw);
+            if($pw_db != "")
+                $result->bindParam(":salt", $salt);
             if(!$result->execute())
             {
                 return false;
@@ -324,9 +367,10 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         }
 
         else {
-            die ('unknown/invalid $CONF["encrypt"] setting: ' . $this->crypt_type);
+            OC_Log::write('OC_USER_SQL', "unknown/invalid crypt_type settings: $this->crypt_type", OC_Log::ERROR);
+            die ('unknown/invalid Encryption type setting: ' . $this->crypt_type);
         }
-
+        OC_Log::write('OC_USER_SQL', "pacrypt() done, return", OC_Log::DEBUG);
         return $password;
     }
 
