@@ -122,6 +122,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
         if(!$result->execute())
         {
+            $err = $result->errorInfo();
+            OC_Log::write('OC_USER_SQL', "Query failed: ".$err[2], OC_Log::DEBUG);
             OC_Log::write('OC_USER_SQL', "Could not update password!", OC_Log::ERROR);
             return false;
         }
@@ -159,6 +161,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
         if(!$result->execute())
         {
+            $err = $result->errorInfo();
+            OC_Log::write('OC_USER_SQL', "Query failed: ".$err[2], OC_Log::DEBUG);
             return false;
         }
         OC_Log::write('OC_USER_SQL', "Fetching row...", OC_Log::DEBUG);
@@ -208,23 +212,21 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             $query .= " $this->sql_column_active = 1";
         }
        if($limit != null)
-          $query .= " LIMIT :limit";
+          $query .= " LIMIT $limit";
        if($offset != null)
-          $query .= " OFFSET :offset";
+          $query .= " OFFSET $offset";
        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
        $result = $this->db->prepare($query);
        if($search != '')
           $result->bindParam(":search", "%$search%");
-       if($limit != null)
-           $result->bindParam(":limit", $limit);
-       if($offset != null)
-           $result->bindParam(":offset", $offset);
        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
        if(!$result->execute())
        {
+        $err = $result->errorInfo();
+        OC_Log::write('OC_USER_SQL', "Query failed: ".$err[2], OC_Log::DEBUG);
         return array();
        }
-       OC_Log::write('OC_USER_SQL', "Fetchin results...", OC_Log::DEBUG);
+       OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
        while($row = $result->fetch())
        {
            $uid = $row[$this->sql_column_username];
@@ -267,6 +269,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
         if(!$result->execute())
         {
+            $err = $result->errorInfo();
+            OC_Log::write('OC_USER_SQL', "Query failed: ".$err[2], OC_Log::DEBUG);
             return false;
         }
         OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
