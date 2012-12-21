@@ -218,7 +218,10 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
        $result = $this->db->prepare($query);
        if($search != '')
-          $result->bindParam(":search", "%$search%");
+       {
+          $search = "%$search%";
+          $result->bindParam(":search", $search);
+       }
        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
        if(!$result->execute())
        {
