@@ -146,18 +146,19 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         {
             return false;
         }
-        $suid = trim($uid);
+        $uid = trim($uid);
         if($this->default_domain && (strpos($uid, '@') === false))
         {
-            $suid .= "@".$this->default_domain;
+            $uid .= "@".$this->default_domain;
         }
+        $uid = strtolower($uid);
         
         $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this->sql_column_active != '')
             $query .= " AND $this->sql_column_active = 1";
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this->db->prepare($query);
-        $result->bindParam(":uid", $suid);
+        $result->bindParam(":uid", $uid);
         OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
         if(!$result->execute())
         {
@@ -176,6 +177,11 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         if($this->pacrypt($password, $row[$this->sql_column_password]) == $row[$this->sql_column_password])
         {
             OC_Log::write('OC_USER_SQL', "Passwords matching, return true", OC_Log::DEBUG);
+            if($this->strip_domain)
+            {
+                $uid = explode("@", $uid);
+                $uid = $uid[0];
+            }
             return $uid;
         }
         else
@@ -212,9 +218,15 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             $query .= " $this->sql_column_active = 1";
         }
        if($limit != null)
+       {
+          $limit = intval($limit);
           $query .= " LIMIT $limit";
+       }
        if($offset != null)
+       {
+          $offset = intval($offset);
           $query .= " OFFSET $offset";
+       }
        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
        $result = $this->db->prepare($query);
        if($search != '')
@@ -238,7 +250,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
                $uid = explode("@", $uid);
                $uid = $uid[0];
            }
-           $users[] = $uid;
+           $users[] = strtolower($uid);
        }
        OC_Log::write('OC_USER_SQL', "Return list of results", OC_Log::DEBUG);
        return $users;
@@ -257,11 +269,12 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         {
             return false;
         }
-        
+        $uid = trim($uid);
         if($this->default_domain && (strpos($uid, '@') === false))
         {
             $uid .= "@".$this->default_domain;
-        }            
+        }
+        $uid = strtolower($uid);
         
         $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this->sql_column_active != '')
