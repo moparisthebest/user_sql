@@ -335,20 +335,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             $password = md5($pw);
         }
 
-        elseif ($this->crypt_type == 'system') {
-            if (preg_match("/\\$1\\$/", $pw_db)) {
-                $split_salt = preg_split ('/\$/', $pw_db);
-                $salt = "\$1\$${split_salt[2]}\$";
-            }
-            else {
-                if (strlen($pw_db) == 0) {
-                    $salt = substr (md5 (mt_rand ()), 0, 2);
-                }
-                else {
-                    $salt = substr ($pw_db, 0, 2);
-                }
-            }
-            $password = crypt ($pw, $salt);
+        elseif ($this->crypt_type == 'system') { // We never generate salts, as user creation is not allowed here
+            $password = crypt ($pw, $pw_db);
         }
 
         elseif ($this->crypt_type == 'cleartext') {
