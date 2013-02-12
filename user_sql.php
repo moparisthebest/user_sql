@@ -4,7 +4,7 @@
  * ownCloud - user_sql
  *
  * @author Andreas Böhler
- * @copyright 2012 Andreas Böhler <andreas (at) aboehler (dot) at>
+ * @copyright 2012/2013 Andreas Böhler <andreas (at) aboehler (dot) at>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
@@ -362,6 +362,28 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
             $result->bindParam(":pw", $pw);
             if($pw_db != "")
                 $result->bindParam(":salt", $salt);
+            if(!$result->execute())
+            {
+                return false;
+            }
+            $row = $result->fetch();
+            if(!$row)
+            {
+                return false;
+            }
+            $password = $row[0];
+        }
+
+        elseif($this->crypt_type == 'mysql_password')
+        {
+            if(!$this->db_conn)
+            {
+                return false;
+            }        
+            $query = "SELECT PASSWORD(:pw);";
+
+            $result = $this->db->prepare($query);
+            $result->bindParam(":pw", $pw);
             if(!$result->execute())
             {
                 return false;
