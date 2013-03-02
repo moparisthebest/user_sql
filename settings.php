@@ -23,8 +23,10 @@
 $params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 'sql_table', 'sql_column_username', 'sql_column_password', 'sql_type', 'sql_column_active', 'strip_domain', 'default_domain', 'crypt_type');
 
 OCP\Util::addscript('user_sql', 'settings');
+OCP\User::checkAdminUser();
 
 if ($_POST) {
+    OCP\JSON::callCheck();
     foreach($params as $param){
         if(isset($_POST[$param]))
         {
