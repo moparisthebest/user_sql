@@ -3,8 +3,12 @@
 /**
  * ownCloud - user_sql
  *
- * @author Andreas Böhler
+ * @author Andreas Böhler and contributors
  * @copyright 2012/2013 Andreas Böhler <andreas (at) aboehler (dot) at>
+ *
+ * credits go to Ed W for several SQL injection fixes and caching support
+ * credits go to Frédéric France for providing Joomla support
+ * credits go to 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
@@ -200,7 +204,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
     public function getUsers($search = '', $limit = null, $offset = null)
     {
-       OC_Log::write('OC_USER_SQL', "Entering getUsers() with Search: $search", OC_Log::DEBUG);
+       OC_Log::write('OC_USER_SQL', "Entering getUsers() with Search: $search, Limit: $limit, Offset: $offset", OC_Log::DEBUG);
        $users = array();
        if(!$this->db_conn)
        {
@@ -217,6 +221,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
                 $query .= " WHERE";
             $query .= " $this->sql_column_active = 1";
         }
+       $query .= " ORDER BY $this->sql_column_username";
        if($limit != null)
        {
           $limit = intval($limit);
@@ -264,6 +269,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
     public function userExists($uid)
     {
+    	static $cached_exists;
         OC_Log::write('OC_USER_SQL', "Entering userExists() for UID: $uid", OC_Log::DEBUG);
         if(!$this->db_conn)
         {
@@ -276,6 +282,10 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         }
         $uid = strtolower($uid);
         
+        if ($uid === $cached_exists) {
+            OC_Log::write('OC_USER_SQL', "User exists (using cache), return true", OC_Log::DEBUG);
+            return true;
+        }
         $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this->sql_column_active != '')
             $query .= " AND $this->sql_column_active = 1";
@@ -299,6 +309,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         else
         {
             OC_Log::write('OC_USER_SQL', "User exists, return true", OC_Log::DEBUG);
+            $cached_exists = $uid;
             return true;
         }
 
@@ -394,6 +405,18 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
                 return false;
             }
             $password = $row[0];
+        }
+        
+        // The following is by Frédéric France
+        elseif($this->crypt_type == 'joomla') 
+        {
+            $split_salt = preg_split ('/:/', $pw_db);
+            if(isset($split_salt[1])) 
+            {
+                $salt = $split_salt[1];
+            }
+            $password = ($salt) ? md5($pw.$salt) : md5($pw);
+            $password.= ':'.$salt;
         }
 
         else {
