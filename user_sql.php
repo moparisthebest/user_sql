@@ -75,7 +75,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
 
     public function implementsAction($actions) 
     {
-        return (bool)((OC_USER_BACKEND_CHECK_PASSWORD | OC_USER_BAKCNED_GET_DISPLAYNAME) & $actions);
+        return (bool)((OC_USER_BACKEND_CHECK_PASSWORD | OC_USER_BACKEND_GET_DISPLAYNAME) & $actions);
     }
 
     public function hasUserListings() {
