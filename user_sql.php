@@ -43,6 +43,9 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
     protected $default_domain;
     protected $strip_domain;
     protected $crypt_type;
+	protected $domain_settings;
+	protected $domain_array;
+	protected $map_array;
 
     public function __construct() 
     {
@@ -61,6 +64,9 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         $this->default_domain = OCP\Config::getAppValue('user_sql', 'default_domain', '');
         $this->strip_domain = OCP\Config::getAppValue('user_sql', 'strip_domain', 0);
         $this->crypt_type = OCP\Config::getAppValue('user_sql', 'crypt_type', 'md5crypt');
+		$this->domain_settings = OCP\Config::getAppValue('user_sql', 'domain_settings', 'none');
+		$this->domain_array = explode(",", OCP\Config::getAppValue('user_sql', 'domain_array', array()));
+		$this->map_array = explode(",", OCP\Config::getAppValue('user_sql', 'map_array', array()));
         $dsn = $this->sql_type.":host=".$this->sql_host.";dbname=".$this->sql_database;
         try 
         {
@@ -73,6 +79,49 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         }
         return false;
     }
+
+	private function doUserDomainMapping($uid)
+	{
+		$uid = trim($uid);
+		
+		switch($this->domain_settings)
+		{
+			case "none":
+				OC_Log::write('OC_USER_SQL', "No mapping", OC_Log::DEBUG);
+				break;
+			case "default":
+				OC_Log::write('OC_USER_SQL', "Default mapping", OC_Log::DEBUG);
+				if($this->default_domain && (strpos($uid, '@') === false))
+            		$uid .= "@".$this->default_domain;
+				break;
+			case "server":
+				OC_Log::write('OC_USER_SQL', "Server based mapping", OC_Log::DEBUG);
+				if(strpos($uid, '@') === false)
+					$uid .= "@".$_SERVER['SERVER_NAME'];
+				break;
+			case "mapping":
+				OC_Log::write('OC_USER_SQL', 'Domain mapping selected', OC_Log::DEBUG);
+				if(strpos($uid, '@') === false)
+				{
+					for($i=0;$i<count($this->domain_array);$i++)
+					{
+						OC_Log::write('OC_USER_SQL', 'Checking domain in mapping: '.$this->domain_array[$i], OC_Log::DEBUG);
+						if($_SERVER['SERVER_NAME'] == trim($this->domain_array[$i]))
+						{
+							OC_Log::write('OC_USER_SQL', 'Found domain in mapping: '.$this->domain_array[$i], OC_Log::DEBUG);
+							$uid .= "@".trim($this->map_array[$i]);
+							break;
+						}
+					}
+				}
+				break;
+		}
+		
+
+		$uid = strtolower($uid);
+		OC_Log::write('OC_USER_SQL', 'Returning mapped UID: '.$uid, OC_Log::DEBUG);
+		return $uid;
+	}
 
     public function implementsAction($actions) 
     {
@@ -103,11 +152,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         {
             return false;
         }
-        $uid = trim($uid);
-        if($this->default_domain && (strpos($uid, '@') === false))
-        {
-            $uid .= "@".$this->default_domain;
-        }
+        $uid = $this->doUserDomainMapping($uid);
+
         $query = "SELECT $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this->db->prepare($query);
@@ -157,12 +203,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         {
             return false;
         }
-        $uid = trim($uid);
-        if($this->default_domain && (strpos($uid, '@') === false))
-        {
-            $uid .= "@".$this->default_domain;
-        }
-        $uid = strtolower($uid);
+		$uid = $this->doUserDomainMapping($uid);
         
         $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this->sql_column_active != '')
@@ -286,13 +327,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         {
             return false;
         }
-        $uid = trim($uid);
-        if($this->default_domain && (strpos($uid, '@') === false))
-        {
-            $uid .= "@".$this->default_domain;
-        }
-        $uid = strtolower($uid);
-        
+        $uid = $this->doUserDomainMapping($uid);
         $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this->sql_column_active != '')
             $query .= " AND $this->sql_column_active = 1";
@@ -331,13 +366,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
         {
             return false;
         }
-        $uid = trim($uid);
-        if($this->default_domain && (strpos($uid, '@') === false))
-        {
-            $uid .= "@".$this->default_domain;
-        }
-        $uid = strtolower($uid);
-
+        $uid = $this->doUserDomainMapping($uid);
+        
         if(!$this->userExists($uid))
         {
             return false;

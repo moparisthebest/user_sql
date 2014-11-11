@@ -11,7 +11,8 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
         <legend><strong><?php echo $l->t('SQL'); ?></strong></legend>
 	<ul>
 	  <li><a id="sqlBasicSettings" href="#sql-1"><?php echo $l -> t('Database Settings'); ?></a></li>
-          <li><a id="sqlAdvSettings" href="#sql-2"><?php echo $l->t('Advanced Settings'); ?></a></li>
+          <li><a id="sqlAdvSettings" href="#sql-2"><?php echo $l->t('Column/Password Settings'); ?></a></li>
+          <li><a id="sqlDomainSettings" href="#sql-3"><?php echo $l->t('Domain Settings'); ?></a></li>
         </ul>
 
         <fieldset id="sql-1">
@@ -58,9 +59,33 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
                 </select></td>
             </tr>
             <tr><td><label for="sql_column_active"><?php echo $l->t('User Active Column');?></label></td><td><input type="text" id="sql_column_active" name="sql_column_active" value="<?php echo $_['sql_column_active']; ?>" /></td></tr>
-            <tr><td><label for="strip_domain"><?php echo $l->t('Strip Domain Part from Username');?></label></td><td><input type="checkbox" id="strip_domain" name="strip_domain" value="1"<?php if($_['strip_domain']) echo ' checked'; ?> title="Strip Domain Part from Username when logging in and retrieving username lists"></td></tr>
-            <tr><td><label for="default_domain"><?php echo $l->t('Add default domain to Usernames');?></label></td><td><input type="text" id="default_domain" name="default_domain" value="<?php echo $_['default_domain']; ?>" /></td></tr>
         </table>
+        </fieldset>
+        <fieldset id="sql-3">
+        	<table>
+        		<tr><td><label for="domain_settings"><?php echo $l->t('Domain Settings');?></label></td><td><table>
+        			<tr><td><input type="radio" name="domain_settings" id="domain_none" value="none" <?php if($_['domain_settings'] == "") echo 'checked="checked"'; ?>><?php echo $l->t('No Mapping') ?></td></tr>
+        			<tr><td><input type="radio" name="domain_settings" id="domain_server" value="server" <?php if($_['domain_settings'] == "server") echo 'checked="checked"'; ?>><?php echo $l->t('Append Server Hostname') ?></td><td></td></tr>        			
+        			<tr><td><input type="radio" name="domain_settings" id="domain_default" value="default" <?php if($_['domain_settings'] == "default") echo 'checked="checked"'; ?>><?php echo $l->t('Append Default') ?></td><td><input type="text" id="default_domain" name="default_domain" value="<?php echo $_['default_domain']; ?>" /></td></tr>
+        			<tr><td><input type="radio" name="domain_settings" id="domain_mapping" value="mapping" <?php if($_['domain_settings'] == "mapping") echo 'checked="checked"'; ?>><?php echo $l->t('Map Domains') ?></td><td>
+        					<table id="domain_map_entries" cellspacing="2" cellpadding="2">
+    							<tbody>
+    								<tr><th><input type="text" placeholder="Server Domain" id="inputServerDomain"></th><th><input type="text" placeholder="Map to Domain" id="inputMapDomain"></th><th><input id="domainAddMap" type="submit" value="<?php echo $l->t('Add Entry'); ?>" /></th></tr>
+    								<?php 
+    									$domains = explode(",", $_['domain_array']);
+										$maps = explode(",", $_['map_array']);
+										for($i=0;$i<count($domains);$i++)
+										{
+											if(trim($domains[$i]) != "" && trim($domains[$i]) != "")
+												echo "<tr><td>".htmlspecialchars($domains[$i])."</td><td>".htmlspecialchars($maps[$i])."</td><td><a class=\"deleteLink\" href=\"#\" >delete</a></td></tr>";	
+										}
+									?>
+    							</tbody>
+        					</table></td></tr>
+        		</table></td></tr>
+            <tr><td><label for="strip_domain"><?php echo $l->t('Strip Domain Part from Username');?></label></td><td><input type="checkbox" id="strip_domain" name="strip_domain" value="1"<?php if($_['strip_domain']) echo ' checked'; ?> title="Strip Domain Part from Username when logging in and retrieving username lists"></td></tr>
+	
+        	</table>
         </fieldset>
         <input type="hidden" name="requesttoken" value="<?php echo $_['requesttoken'] ?>" id="requesttoken" />
 	<input type="hidden" name="appname" value="user_sql" />

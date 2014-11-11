@@ -23,27 +23,11 @@
 $params = array('sql_host', 'sql_user', 'sql_database', 'sql_password',
                 'sql_table', 'sql_column_username', 'sql_column_password',
                 'sql_type', 'sql_column_active', 'strip_domain', 'default_domain',
-                'crypt_type', 'sql_column_displayname');
+                'crypt_type', 'sql_column_displayname', 'domain_map', 'domain_settings');
 
 OCP\Util::addStyle('user_sql', 'settings');
 OCP\Util::addScript('user_sql', 'settings');
 OCP\User::checkAdminUser();
-
-/*
-if ($_POST) {
-    OCP\JSON::callCheck();
-    foreach($params as $param){
-        if(isset($_POST[$param]))
-        {
-            OCP\Config::setAppValue('user_sql', $param, $_POST[$param]);
-        }
-        elseif($param == 'strip_domain')
-        {
-            OCP\Config::setAppValue('user_sql', $param, 0);
-        }
-    }
-}
-*/
 
 // fill template
 $tmpl = new OCP\Template( 'user_sql', 'settings');
@@ -66,7 +50,9 @@ $tmpl->assign( 'strip_domain', OCP\Config::getAppValue( 'user_sql', 'strip_domai
 $tmpl->assign( 'default_domain', OCP\Config::getAppValue( 'user_sql', 'default_domain', ''));
 $tmpl->assign( 'crypt_type', OCP\Config::getAppValue( 'user_sql', 'crypt_type', 'mysql_encrypt'));
 $tmpl->assign( 'sql_column_displayname', OCP\Config::getAppValue( 'user_sql', 'sql_column_displayname', ''));
-
+$tmpl->assign( 'map_array', OCP\Config::getAppValue( 'user_sql', 'map_array', ''));
+$tmpl->assign( 'domain_array', OCP\Config::getAppValue( 'user_sql', 'domain_array', ''));
+$tmpl->assign( 'domain_settings', OCP\Config::getAppValue( 'user_sql', 'domain_settings', ''));
 // workaround to detect OC version
 $ocVersion = @reset(OCP\Util::getVersion());
 $tmpl->assign('ocVersion', $ocVersion);
