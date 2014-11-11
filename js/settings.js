@@ -35,7 +35,7 @@ user_sql.adminSettingsUI = function() {
       return false;
     });
   }
-}
+};
 
 $(document).ready(function() {
   if ($('#sql')) {
