@@ -8,7 +8,7 @@
  *
  * credits go to Ed W for several SQL injection fixes and caching support
  * credits go to Frédéric France for providing Joomla support
- * credits go to 
+ * credits go to
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
@@ -25,7 +25,8 @@
  *
  */
 
-class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
+class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
+{
     protected $cache;
     // cached settings
     protected $sql_host;
@@ -43,144 +44,147 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
     protected $default_domain;
     protected $strip_domain;
     protected $crypt_type;
-	protected $domain_settings;
-	protected $domain_array;
-	protected $map_array;
+    protected $domain_settings;
+    protected $domain_array;
+    protected $map_array;
 
-    public function __construct() 
+    public function __construct()
     {
-        $this->db_conn = false;
-        $this->cache = \OC\Cache::getGlobalCache();
-        $this->sql_host = OCP\Config::getAppValue('user_sql', 'sql_host', '');
-        $this->sql_username = OCP\Config::getAppValue('user_sql', 'sql_user', '');
-        $this->sql_database = OCP\Config::getAppValue('user_sql', 'sql_database', '');
-        $this->sql_password = OCP\Config::getAppValue('user_sql', 'sql_password', '');
-        $this->sql_table = OCP\Config::getAppValue('user_sql', 'sql_table', '');
-        $this->sql_column_username = OCP\Config::getAppValue('user_sql', 'sql_column_username', '');
-        $this->sql_column_password = OCP\Config::getAppValue('user_sql', 'sql_column_password', '');
-        $this->sql_column_displayname = OCP\Config::getAppValue('user_sql', 'sql_column_displayname', '');
-        $this->sql_column_active = OCP\Config::getAppValue('user_sql', 'sql_column_active', '');
-        $this->sql_type = OCP\Config::getAppValue('user_sql', 'sql_type', '');
-        $this->default_domain = OCP\Config::getAppValue('user_sql', 'default_domain', '');
-        $this->strip_domain = OCP\Config::getAppValue('user_sql', 'strip_domain', 0);
-        $this->crypt_type = OCP\Config::getAppValue('user_sql', 'crypt_type', 'md5crypt');
-		$this->domain_settings = OCP\Config::getAppValue('user_sql', 'domain_settings', 'none');
-		$this->domain_array = explode(",", OCP\Config::getAppValue('user_sql', 'domain_array', array()));
-		$this->map_array = explode(",", OCP\Config::getAppValue('user_sql', 'map_array', array()));
-        $dsn = $this->sql_type.":host=".$this->sql_host.";dbname=".$this->sql_database;
-        try 
+        $this -> db_conn = false;
+        $this -> cache = \OC\Cache::getGlobalCache();
+        $this -> sql_host = OCP\Config::getAppValue('user_sql', 'sql_host', '');
+        $this -> sql_username = OCP\Config::getAppValue('user_sql', 'sql_user', '');
+        $this -> sql_database = OCP\Config::getAppValue('user_sql', 'sql_database', '');
+        $this -> sql_password = OCP\Config::getAppValue('user_sql', 'sql_password', '');
+        $this -> sql_table = OCP\Config::getAppValue('user_sql', 'sql_table', '');
+        $this -> sql_column_username = OCP\Config::getAppValue('user_sql', 'sql_column_username', '');
+        $this -> sql_column_password = OCP\Config::getAppValue('user_sql', 'sql_column_password', '');
+        $this -> sql_column_displayname = OCP\Config::getAppValue('user_sql', 'sql_column_displayname', '');
+        $this -> sql_column_active = OCP\Config::getAppValue('user_sql', 'sql_column_active', '');
+        $this -> sql_type = OCP\Config::getAppValue('user_sql', 'sql_type', '');
+        $this -> default_domain = OCP\Config::getAppValue('user_sql', 'default_domain', '');
+        $this -> strip_domain = OCP\Config::getAppValue('user_sql', 'strip_domain', 0);
+        $this -> crypt_type = OCP\Config::getAppValue('user_sql', 'crypt_type', 'md5crypt');
+        $this -> domain_settings = OCP\Config::getAppValue('user_sql', 'domain_settings', 'none');
+        $this -> domain_array = explode(",", OCP\Config::getAppValue('user_sql', 'domain_array', array()));
+        $this -> map_array = explode(",", OCP\Config::getAppValue('user_sql', 'map_array', array()));
+        $dsn = $this -> sql_type . ":host=" . $this -> sql_host . ";dbname=" . $this -> sql_database;
+        try
         {
-            $this->db = new PDO($dsn, $this->sql_username, $this->sql_password);
-            $this->db_conn = true;
-        }
-        catch (PDOException $e) 
+            $this -> db = new PDO($dsn, $this -> sql_username, $this -> sql_password);
+            $this -> db_conn = true;
+        } catch (PDOException $e)
         {
-            OC_Log::write('OC_USER_SQL', 'Failed to connect to the database: ' . $e->getMessage(), OC_Log::ERROR);
+            OC_Log::write('OC_USER_SQL', 'Failed to connect to the database: ' . $e -> getMessage(), OC_Log::ERROR);
         }
         return false;
     }
 
-	private function doUserDomainMapping($uid)
-	{
-		$uid = trim($uid);
-		
-		switch($this->domain_settings)
-		{
-			case "none":
-				OC_Log::write('OC_USER_SQL', "No mapping", OC_Log::DEBUG);
-				break;
-			case "default":
-				OC_Log::write('OC_USER_SQL', "Default mapping", OC_Log::DEBUG);
-				if($this->default_domain && (strpos($uid, '@') === false))
-            		$uid .= "@".$this->default_domain;
-				break;
-			case "server":
-				OC_Log::write('OC_USER_SQL', "Server based mapping", OC_Log::DEBUG);
-				if(strpos($uid, '@') === false)
-					$uid .= "@".$_SERVER['SERVER_NAME'];
-				break;
-			case "mapping":
-				OC_Log::write('OC_USER_SQL', 'Domain mapping selected', OC_Log::DEBUG);
-				if(strpos($uid, '@') === false)
-				{
-					for($i=0;$i<count($this->domain_array);$i++)
-					{
-						OC_Log::write('OC_USER_SQL', 'Checking domain in mapping: '.$this->domain_array[$i], OC_Log::DEBUG);
-						if($_SERVER['SERVER_NAME'] == trim($this->domain_array[$i]))
-						{
-							OC_Log::write('OC_USER_SQL', 'Found domain in mapping: '.$this->domain_array[$i], OC_Log::DEBUG);
-							$uid .= "@".trim($this->map_array[$i]);
-							break;
-						}
-					}
-				}
-				break;
-		}
-		
+    private function doUserDomainMapping($uid)
+    {
+        $uid = trim($uid);
 
-		$uid = strtolower($uid);
-		OC_Log::write('OC_USER_SQL', 'Returning mapped UID: '.$uid, OC_Log::DEBUG);
-		return $uid;
-	}
+        switch($this->domain_settings)
+        {
+            case "default" :
+                OC_Log::write('OC_USER_SQL', "Default mapping", OC_Log::DEBUG);
+                if($this -> default_domain && (strpos($uid, '@') === false))
+                    $uid .= "@" . $this -> default_domain;
+                break;
+            case "server" :
+                OC_Log::write('OC_USER_SQL', "Server based mapping", OC_Log::DEBUG);
+                if(strpos($uid, '@') === false)
+                    $uid .= "@" . $_SERVER['SERVER_NAME'];
+                break;
+            case "mapping" :
+                OC_Log::write('OC_USER_SQL', 'Domain mapping selected', OC_Log::DEBUG);
+                if(strpos($uid, '@') === false)
+                {
+                    for($i = 0; $i < count($this -> domain_array); $i++)
+                    {
+                        OC_Log::write('OC_USER_SQL', 'Checking domain in mapping: ' . $this -> domain_array[$i], OC_Log::DEBUG);
+                        if($_SERVER['SERVER_NAME'] == trim($this -> domain_array[$i]))
+                        {
+                            OC_Log::write('OC_USER_SQL', 'Found domain in mapping: ' . $this -> domain_array[$i], OC_Log::DEBUG);
+                            $uid .= "@" . trim($this -> map_array[$i]);
+                            break;
+                        }
+                    }
+                }
+                break;
+            case "none" :
+            default :
+                OC_Log::write('OC_USER_SQL', "No mapping", OC_Log::DEBUG);
+                break;
+        }
 
-    public function implementsAction($actions) 
+        $uid = strtolower($uid);
+        OC_Log::write('OC_USER_SQL', 'Returning mapped UID: ' . $uid, OC_Log::DEBUG);
+        return $uid;
+    }
+
+    public function implementsAction($actions)
     {
         return (bool)((OC_USER_BACKEND_CHECK_PASSWORD | OC_USER_BACKEND_GET_DISPLAYNAME) & $actions);
     }
 
-    public function hasUserListings() {
+    public function hasUserListings()
+    {
         return true;
     }
 
-    public function createUser() {
+    public function createUser()
+    {
         // Can't create user
         OC_Log::write('OC_USER_SQL', 'Not possible to create local users from web frontend using SQL user backend', OC_Log::ERROR);
         return false;
     }
 
-    public function deleteUser( $uid ) 
+    public function deleteUser($uid)
     {
         // Can't delete user
         OC_Log::write('OC_USER_SQL', 'Not possible to delete local users from web frontend using SQL user backend', OC_Log::ERROR);
         return false;
     }
 
-    public function setPassword ( $uid, $password ) {
-        // Update the user's password - this might affect other services, that user the same database, as well
+    public function setPassword($uid, $password)
+    {
+        // Update the user's password - this might affect other services, that
+        // user the same database, as well
         OC_Log::write('OC_USER_SQL', "Entering setPassword for UID: $uid", OC_Log::DEBUG);
-        if(!$this->db_conn)
+        if(!$this -> db_conn)
         {
             return false;
         }
-        $uid = $this->doUserDomainMapping($uid);
+        $uid = $this -> doUserDomainMapping($uid);
 
         $query = "SELECT $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
-        $result = $this->db->prepare($query);
-        $result->bindParam(":uid", $uid);
+        $result = $this -> db -> prepare($query);
+        $result -> bindParam(":uid", $uid);
         OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
-        if(!$result->execute())
+        if(!$result -> execute())
         {
             return false;
         }
         OC_Log::write('OC_USER_SQL', "Fetching result...", OC_Log::DEBUG);
-        $row = $result->fetch();
+        $row = $result -> fetch();
         if(!$row)
         {
             return false;
         }
-        $old_password = $row[$this->sql_column_password];
-        $enc_password = $this->pacrypt($password, $old_password);
+        $old_password = $row[$this -> sql_column_password];
+        $enc_password = $this -> pacrypt($password, $old_password);
         $query = "UPDATE $this->sql_table SET $this->sql_column_password = :enc_password WHERE $this->sql_column_username = :uid";
         OC_Log::write('OC_USER_SQL', "Preapring query: $query", OC_Log::DEBUG);
-        $result = $this->db->prepare($query);
-        $result->bindParam(":enc_password", $enc_password);
-        $result->bindParam(":uid", $uid);
+        $result = $this -> db -> prepare($query);
+        $result -> bindParam(":enc_password", $enc_password);
+        $result -> bindParam(":uid", $uid);
         OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
-        if(!$result->execute())
+        if(!$result -> execute())
         {
-            $err = $result->errorInfo();
-            OC_Log::write('OC_USER_SQL', "Query failed: ".$err[2], OC_Log::DEBUG);
+            $err = $result -> errorInfo();
+            OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
             OC_Log::write('OC_USER_SQL', "Could not update password!", OC_Log::ERROR);
             return false;
         }
@@ -189,54 +193,53 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
     }
 
     /**
-    * @brief Check if the password is correct
-    * @param $uid The username
-    * @param $password The password
-    * @returns true/false
-    *
-    * Check if the password is correct without logging in the user
-    */
+     * @brief Check if the password is correct
+     * @param $uid The username
+     * @param $password The password
+     * @returns true/false
+     *
+     * Check if the password is correct without logging in the user
+     */
     public function checkPassword($uid, $password)
     {
         OC_Log::write('OC_USER_SQL', "Entering checkPassword() for UID: $uid", OC_Log::DEBUG);
-        if(!$this->db_conn)
+        if(!$this -> db_conn)
         {
             return false;
         }
-		$uid = $this->doUserDomainMapping($uid);
-        
+        $uid = $this -> doUserDomainMapping($uid);
+
         $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
-        if($this->sql_column_active != '')
+        if($this -> sql_column_active != '')
             $query .= " AND $this->sql_column_active = 1";
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
-        $result = $this->db->prepare($query);
-        $result->bindParam(":uid", $uid);
+        $result = $this -> db -> prepare($query);
+        $result -> bindParam(":uid", $uid);
         OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
-        if(!$result->execute())
+        if(!$result -> execute())
         {
-            $err = $result->errorInfo();
-            OC_Log::write('OC_USER_SQL', "Query failed: ".$err[2], OC_Log::DEBUG);
+            $err = $result -> errorInfo();
+            OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
             return false;
         }
         OC_Log::write('OC_USER_SQL', "Fetching row...", OC_Log::DEBUG);
-        $row = $result->fetch();
+        $row = $result -> fetch();
         if(!$row)
         {
             OC_Log::write('OC_USER_SQL', "Got no row, return false", OC_Log::DEBUG);
             return false;
         }
         OC_Log::write('OC_USER_SQL', "Encrypting and checking password", OC_Log::DEBUG);
-        if($this->pacrypt($password, $row[$this->sql_column_password]) == $row[$this->sql_column_password])
+        if($this -> pacrypt($password, $row[$this -> sql_column_password]) == $row[$this -> sql_column_password])
         {
             OC_Log::write('OC_USER_SQL', "Passwords matching, return true", OC_Log::DEBUG);
-            if($this->strip_domain)
+            if($this -> strip_domain)
             {
                 $uid = explode("@", $uid);
                 $uid = $uid[0];
             }
             return $uid;
-        }
-        else
+        } else
         {
             OC_Log::write('OC_USER_SQL', "Passwords do not match, return false", OC_Log::DEBUG);
             return false;
@@ -244,24 +247,24 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
     }
 
     /**
-    * @brief Get a list of all users
-    * @returns array with all uids
-    *
-    * Get a list of all users.
-    */
+     * @brief Get a list of all users
+     * @returns array with all uids
+     *
+     * Get a list of all users.
+     */
 
     public function getUsers($search = '', $limit = null, $offset = null)
     {
-       OC_Log::write('OC_USER_SQL', "Entering getUsers() with Search: $search, Limit: $limit, Offset: $offset", OC_Log::DEBUG);
-       $users = array();
-       if(!$this->db_conn)
-       {
-        return false;
-       }
-       $query = "SELECT $this->sql_column_username FROM $this->sql_table";
-       if($search != '')
-          $query .= " WHERE $this->sql_column_username LIKE :search";
-        if($this->sql_column_active != '')
+        OC_Log::write('OC_USER_SQL', "Entering getUsers() with Search: $search, Limit: $limit, Offset: $offset", OC_Log::DEBUG);
+        $users = array();
+        if(!$this -> db_conn)
+        {
+            return false;
+        }
+        $query = "SELECT $this->sql_column_username FROM $this->sql_table";
+        if($search != '')
+            $query .= " WHERE $this->sql_column_username LIKE :search";
+        if($this -> sql_column_active != '')
         {
             if($search != '')
                 $query .= " AND";
@@ -269,89 +272,89 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
                 $query .= " WHERE";
             $query .= " $this->sql_column_active = 1";
         }
-       $query .= " ORDER BY $this->sql_column_username";
-       if($limit != null)
-       {
-          $limit = intval($limit);
-          $query .= " LIMIT $limit";
-       }
-       if($offset != null)
-       {
-          $offset = intval($offset);
-          $query .= " OFFSET $offset";
-       }
-       OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
-       $result = $this->db->prepare($query);
-       if($search != '')
-       {
-          $search = "%$search%";
-          $result->bindParam(":search", $search);
-       }
-       OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
-       if(!$result->execute())
-       {
-        $err = $result->errorInfo();
-        OC_Log::write('OC_USER_SQL', "Query failed: ".$err[2], OC_Log::DEBUG);
-        return array();
-       }
-       OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
-       while($row = $result->fetch())
-       {
-           $uid = $row[$this->sql_column_username];
-           if($this->strip_domain)
-           {
-               $uid = explode("@", $uid);
-               $uid = $uid[0];
-           }
-           $users[] = strtolower($uid);
-       }
-       OC_Log::write('OC_USER_SQL', "Return list of results", OC_Log::DEBUG);
-       return $users;
+        $query .= " ORDER BY $this->sql_column_username";
+        if($limit != null)
+        {
+            $limit = intval($limit);
+            $query .= " LIMIT $limit";
+        }
+        if($offset != null)
+        {
+            $offset = intval($offset);
+            $query .= " OFFSET $offset";
+        }
+        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
+        $result = $this -> db -> prepare($query);
+        if($search != '')
+        {
+            $search = "%$search%";
+            $result -> bindParam(":search", $search);
+        }
+        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+        if(!$result -> execute())
+        {
+            $err = $result -> errorInfo();
+            OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
+            return array();
+        }
+        OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
+        while($row = $result -> fetch())
+        {
+            $uid = $row[$this -> sql_column_username];
+            if($this -> strip_domain)
+            {
+                $uid = explode("@", $uid);
+                $uid = $uid[0];
+            }
+            $users[] = strtolower($uid);
+        }
+        OC_Log::write('OC_USER_SQL', "Return list of results", OC_Log::DEBUG);
+        return $users;
     }
 
     /**
-    * @brief check if a user exists
-    * @param string $uid the username
-    * @return boolean
-    */
+     * @brief check if a user exists
+     * @param string $uid the username
+     * @return boolean
+     */
 
     public function userExists($uid)
     {
 
         $cacheKey = 'sql_user_exists_' . $uid;
-        $cacheVal = $this->cache->get($cacheKey);
-        if(!is_null($cacheVal)) return (bool)$cacheVal;
+        $cacheVal = $this -> cache -> get($cacheKey);
+        if(!is_null($cacheVal))
+            return (bool)$cacheVal;
 
         OC_Log::write('OC_USER_SQL', "Entering userExists() for UID: $uid", OC_Log::DEBUG);
-        if(!$this->db_conn)
+        if(!$this -> db_conn)
         {
             return false;
         }
-        $uid = $this->doUserDomainMapping($uid);
+        $uid = $this -> doUserDomainMapping($uid);
         $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = :uid";
-        if($this->sql_column_active != '')
+        if($this -> sql_column_active != '')
             $query .= " AND $this->sql_column_active = 1";
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
-        $result = $this->db->prepare($query);
-        $result->bindParam(":uid", $uid);
+        $result = $this -> db -> prepare($query);
+        $result -> bindParam(":uid", $uid);
         OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
-        if(!$result->execute())
+        if(!$result -> execute())
         {
-            $err = $result->errorInfo();
-            OC_Log::write('OC_USER_SQL', "Query failed: ".$err[2], OC_Log::DEBUG);
+            $err = $result -> errorInfo();
+            OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
             return false;
         }
         OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
-       	
-	    $exists = (bool)$result->fetch();
-	    $this->cache->set($cacheKey, $exists, 60); 
+
+        $exists = (bool)$result -> fetch();
+        $this -> cache -> set($cacheKey, $exists, 60);
 
         if(!$exists)
         {
             OC_Log::write('OC_USER_SQL', "Empty row, user does not exists, return false", OC_Log::DEBUG);
             return false;
-        }
-        else
+        } else
         {
             OC_Log::write('OC_USER_SQL', "User exists, return true", OC_Log::DEBUG);
             return true;
@@ -362,164 +365,165 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
     public function getDisplayName($uid)
     {
         OC_Log::write('OC_USER_SQL', "Entering getDisplayName() for UID: $uid", OC_Log::DEBUG);
-        if(!$this->db_conn)
+        if(!$this -> db_conn)
         {
             return false;
         }
-        $uid = $this->doUserDomainMapping($uid);
-        
-        if(!$this->userExists($uid))
+        $uid = $this -> doUserDomainMapping($uid);
+
+        if(!$this -> userExists($uid))
         {
             return false;
         }
 
         $query = "SELECT $this->sql_column_displayname FROM $this->sql_table WHERE $this->sql_column_username = :uid";
-        if($this->sql_column_active != '')
+        if($this -> sql_column_active != '')
             $query .= " AND $this->sql_column_active = 1";
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
-        $result = $this->db->prepare($query);
-        $result->bindParam(":uid", $uid);
+        $result = $this -> db -> prepare($query);
+        $result -> bindParam(":uid", $uid);
         OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
-        if(!$result->execute())
+        if(!$result -> execute())
         {
-            $err = $result->errorInfo();
-            OC_Log::write('OC_USER_SQL', "Query failed: ".$err[2], OC_Log::DEBUG);
+            $err = $result -> errorInfo();
+            OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
             return false;
         }
         OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
-        $row = $result->fetch();
+        $row = $result -> fetch();
         if(!$row)
         {
             OC_Log::write('OC_USER_SQL', "Empty row, user has no display name or does not exist, return false", OC_Log::DEBUG);
             return false;
-        }
-        else
+        } else
         {
             OC_Log::write('OC_USER_SQL', "User exists, return true", OC_Log::DEBUG);
-            $displayName = utf8_encode($row[$this->sql_column_displayname]);
-            return $displayName;;
+            $displayName = utf8_encode($row[$this -> sql_column_displayname]);
+            return $displayName; ;
         }
         return false;
     }
 
     public function getDisplayNames($search = '', $limit = null, $offset = null)
     {
-        $uids = $this->getUsers($search, $limit, $offset);
+        $uids = $this -> getUsers($search, $limit, $offset);
         $displayNames = array();
         foreach($uids as $uid)
         {
-            $displayNames[$uid] = $this->getDisplayName($uid);
+            $displayNames[$uid] = $this -> getDisplayName($uid);
         }
         return $displayNames;
     }
-       
-     /**
-     * The following functions were directly taken from PostfixAdmin and just slightly modified
+
+    /**
+     * The following functions were directly taken from PostfixAdmin and just
+     * slightly modified
      * to suit our needs.
-     * Encrypt a password, using the apparopriate hashing mechanism as defined in 
-     * config.inc.php ($this->crypt_type). 
-     * When wanting to compare one pw to another, it's necessary to provide the salt used - hence
+     * Encrypt a password, using the apparopriate hashing mechanism as defined in
+     * config.inc.php ($this->crypt_type).
+     * When wanting to compare one pw to another, it's necessary to provide the
+     * salt used - hence
      * the second parameter ($pw_db), which is the existing hash from the DB.
      *
      * @param string $pw
      * @param string $encrypted password
      * @return string encrypted password.
      */
-    private function pacrypt ($pw, $pw_db="")
+    private function pacrypt($pw, $pw_db = "")
     {
         OC_Log::write('OC_USER_SQL', "Entering private pacrypt()", OC_Log::DEBUG);
         $pw = stripslashes($pw);
         $password = "";
         $salt = "";
 
-        if ($this->crypt_type == 'md5crypt') {
-            $split_salt = preg_split ('/\$/', $pw_db);
-            if (isset ($split_salt[2])) {
+        if($this -> crypt_type == 'md5crypt')
+        {
+            $split_salt = preg_split('/\$/', $pw_db);
+            if(isset($split_salt[2]))
+            {
                 $salt = $split_salt[2];
             }
-            $password = $this->md5crypt ($pw, $salt);
-        }
-
-        elseif ($this->crypt_type == 'md5') {
+            $password = $this -> md5crypt($pw, $salt);
+        } elseif($this -> crypt_type == 'md5')
+        {
             $password = md5($pw);
-        }
-
-        elseif ($this->crypt_type == 'system') { // We never generate salts, as user creation is not allowed here
-            $password = crypt ($pw, $pw_db);
-        }
-
-        elseif ($this->crypt_type == 'cleartext') {
+        } elseif($this -> crypt_type == 'system')
+        {
+            // We never generate salts, as user creation is not allowed here
+            $password = crypt($pw, $pw_db);
+        } elseif($this -> crypt_type == 'cleartext')
+        {
             $password = $pw;
         }
 
-        // See https://sourceforge.net/tracker/?func=detail&atid=937966&aid=1793352&group_id=191583
+        // See
+        // https://sourceforge.net/tracker/?func=detail&atid=937966&aid=1793352&group_id=191583
         // this is apparently useful for pam_mysql etc.
-        elseif ($this->crypt_type == 'mysql_encrypt')
+        elseif($this -> crypt_type == 'mysql_encrypt')
         {
-            if(!$this->db_conn)
+            if(!$this -> db_conn)
             {
                 return false;
-            }        
-            if ($pw_db!="") {
-                $salt=substr($pw_db,0,2);
+            }
+            if($pw_db != "")
+            {
+                $salt = substr($pw_db, 0, 2);
                 $query = "SELECT ENCRYPT(:pw, :salt);";
-            } else {
+            } else
+            {
                 $query = "SELECT ENCRYPT(:pw);";
             }
 
-            $result = $this->db->prepare($query);
-            $result->bindParam(":pw", $pw);
+            $result = $this -> db -> prepare($query);
+            $result -> bindParam(":pw", $pw);
             if($pw_db != "")
-                $result->bindParam(":salt", $salt);
-            if(!$result->execute())
+                $result -> bindParam(":salt", $salt);
+            if(!$result -> execute())
             {
                 return false;
             }
-            $row = $result->fetch();
+            $row = $result -> fetch();
             if(!$row)
             {
                 return false;
             }
             $password = $row[0];
-        }
-
-        elseif($this->crypt_type == 'mysql_password')
+        } elseif($this -> crypt_type == 'mysql_password')
         {
-            if(!$this->db_conn)
+            if(!$this -> db_conn)
             {
                 return false;
-            }        
+            }
             $query = "SELECT PASSWORD(:pw);";
 
-            $result = $this->db->prepare($query);
-            $result->bindParam(":pw", $pw);
-            if(!$result->execute())
+            $result = $this -> db -> prepare($query);
+            $result -> bindParam(":pw", $pw);
+            if(!$result -> execute())
             {
                 return false;
             }
-            $row = $result->fetch();
+            $row = $result -> fetch();
             if(!$row)
             {
                 return false;
             }
             $password = $row[0];
         }
-        
+
         // The following is by Frédéric France
-        elseif($this->crypt_type == 'joomla') 
+        elseif($this -> crypt_type == 'joomla')
         {
-            $split_salt = preg_split ('/:/', $pw_db);
-            if(isset($split_salt[1])) 
+            $split_salt = preg_split('/:/', $pw_db);
+            if(isset($split_salt[1]))
             {
                 $salt = $split_salt[1];
             }
-            $password = ($salt) ? md5($pw.$salt) : md5($pw);
-            $password.= ':'.$salt;
-        }
-
-        else {
+            $password = ($salt) ? md5($pw . $salt) : md5($pw);
+            $password .= ':' . $salt;
+        } else
+        {
             OC_Log::write('OC_USER_SQL', "unknown/invalid crypt_type settings: $this->crypt_type", OC_Log::ERROR);
-            die ('unknown/invalid Encryption type setting: ' . $this->crypt_type);
+            die('unknown/invalid Encryption type setting: ' . $this -> crypt_type);
         }
         OC_Log::write('OC_USER_SQL', "pacrypt() done, return", OC_Log::DEBUG);
         return $password;
@@ -531,112 +535,114 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface {
     // Call: md5crypt (string cleartextpassword)
     //
 
-    private function md5crypt ($pw, $salt="", $magic="")
+    private function md5crypt($pw, $salt = "", $magic = "")
     {
         $MAGIC = "$1$";
 
-        if ($magic == "") $magic = $MAGIC;
-        if ($salt == "") $salt = $this->create_salt ();
-        $slist = explode ("$", $salt);
-        if ($slist[0] == "1") $salt = $slist[1];
+        if($magic == "")
+            $magic = $MAGIC;
+        if($salt == "")
+            $salt = $this -> create_salt();
+        $slist = explode("$", $salt);
+        if($slist[0] == "1")
+            $salt = $slist[1];
 
-        $salt = substr ($salt, 0, 8);
+        $salt = substr($salt, 0, 8);
         $ctx = $pw . $magic . $salt;
-        $final = $this->pahex2bin (md5 ($pw . $salt . $pw));
+        $final = $this -> pahex2bin(md5($pw . $salt . $pw));
 
-        for ($i=strlen ($pw); $i>0; $i-=16)
+        for($i = strlen($pw); $i > 0; $i -= 16)
         {
-            if ($i > 16)
+            if($i > 16)
             {
-                $ctx .= substr ($final,0,16);
+                $ctx .= substr($final, 0, 16);
+            } else
+            {
+                $ctx .= substr($final, 0, $i);
             }
+        }
+        $i = strlen($pw);
+
+        while($i > 0)
+        {
+            if($i & 1)
+                $ctx .= chr(0);
             else
-            {
-                $ctx .= substr ($final,0,$i);
-            }
+                $ctx .= $pw[0];
+            $i = $i>>1;
         }
-        $i = strlen ($pw);
+        $final = $this -> pahex2bin(md5($ctx));
 
-        while ($i > 0)
-        {
-            if ($i & 1) $ctx .= chr (0);
-            else $ctx .= $pw[0];
-            $i = $i >> 1;
-        }
-        $final = $this->pahex2bin (md5 ($ctx));
-
-        for ($i=0;$i<1000;$i++)
+        for($i = 0; $i < 1000; $i++)
         {
             $ctx1 = "";
-            if ($i & 1)
+            if($i & 1)
+            {
+                $ctx1 .= $pw;
+            } else
+            {
+                $ctx1 .= substr($final, 0, 16);
+            }
+            if($i % 3)
+                $ctx1 .= $salt;
+            if($i % 7)
+                $ctx1 .= $pw;
+            if($i & 1)
+            {
+                $ctx1 .= substr($final, 0, 16);
+            } else
             {
                 $ctx1 .= $pw;
             }
-            else
-            {
-                $ctx1 .= substr ($final,0,16);
-            }
-            if ($i % 3) $ctx1 .= $salt;
-            if ($i % 7) $ctx1 .= $pw;
-            if ($i & 1)
-            {
-                $ctx1 .= substr ($final,0,16);
-            }
-            else
-            {
-                $ctx1 .= $pw;
-            }
-            $final = $this->pahex2bin (md5 ($ctx1));
+            $final = $this -> pahex2bin(md5($ctx1));
         }
         $passwd = "";
-        $passwd .= $this->to64 (((ord ($final[0]) << 16) | (ord ($final[6]) << 8) | (ord ($final[12]))), 4);
-        $passwd .= $this->to64 (((ord ($final[1]) << 16) | (ord ($final[7]) << 8) | (ord ($final[13]))), 4);
-        $passwd .= $this->to64 (((ord ($final[2]) << 16) | (ord ($final[8]) << 8) | (ord ($final[14]))), 4);
-        $passwd .= $this->to64 (((ord ($final[3]) << 16) | (ord ($final[9]) << 8) | (ord ($final[15]))), 4);
-        $passwd .= $this->to64 (((ord ($final[4]) << 16) | (ord ($final[10]) << 8) | (ord ($final[5]))), 4);
-        $passwd .= $this->to64 (ord ($final[11]), 2);
+        $passwd .= $this -> to64(((ord($final[0])<<16) | (ord($final[6])<<8) | (ord($final[12]))), 4);
+        $passwd .= $this -> to64(((ord($final[1])<<16) | (ord($final[7])<<8) | (ord($final[13]))), 4);
+        $passwd .= $this -> to64(((ord($final[2])<<16) | (ord($final[8])<<8) | (ord($final[14]))), 4);
+        $passwd .= $this -> to64(((ord($final[3])<<16) | (ord($final[9])<<8) | (ord($final[15]))), 4);
+        $passwd .= $this -> to64(((ord($final[4])<<16) | (ord($final[10])<<8) | (ord($final[5]))), 4);
+        $passwd .= $this -> to64(ord($final[11]), 2);
         return "$magic$salt\$$passwd";
     }
 
-    private function create_salt ()
+    private function create_salt()
     {
-        srand ((double) microtime ()*1000000);
-        $salt = substr (md5 (rand (0,9999999)), 0, 8);
+        srand((double) microtime() * 1000000);
+        $salt = substr(md5(rand(0, 9999999)), 0, 8);
         return $salt;
     }
-    
-    private function pahex2bin ($str)
+
+    private function pahex2bin($str)
     {
         if(function_exists('hex2bin'))
         {
             return hex2bin($str);
-        }
-        else
+        } else
         {
-            $len = strlen ($str);
+            $len = strlen($str);
             $nstr = "";
-            for ($i=0;$i<$len;$i+=2)
+            for($i = 0; $i < $len; $i += 2)
             {
-                $num = sscanf (substr ($str,$i,2), "%x");
-                $nstr.=chr ($num[0]);
+                $num = sscanf(substr($str, $i, 2), "%x");
+                $nstr .= chr($num[0]);
             }
             return $nstr;
         }
     }
 
-    private function to64 ($v, $n)
+    private function to64($v, $n)
     {
         $ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         $ret = "";
-        while (($n - 1) >= 0)
+        while(($n - 1) >= 0)
         {
             $n--;
             $ret .= $ITOA64[$v & 0x3f];
-            $v = $v >> 6;
+            $v = $v>>6;
         }
         return $ret;
     }
 
 }
-
 ?>
