@@ -262,6 +262,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             return false;
         }
         $query = "SELECT $this->sql_column_username FROM $this->sql_table";
+        $search = $this->doUserDomainMapping($search);
         if($search != '')
             $query .= " WHERE $this->sql_column_username LIKE :search";
         if($this -> sql_column_active != '')
