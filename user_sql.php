@@ -8,7 +8,7 @@
  *
  * credits go to Ed W for several SQL injection fixes and caching support
  * credits go to Frédéric France for providing Joomla support
- * credits go to
+ * credits go to Mark Jansenn for providing Joomla 2.5.18+ / 3.2.1+ support
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
@@ -150,7 +150,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
     public function setPassword($uid, $password)
     {
         // Update the user's password - this might affect other services, that
-        // user the same database, as well
+        // use the same database, as well
         OC_Log::write('OC_USER_SQL', "Entering setPassword for UID: $uid", OC_Log::DEBUG);
         if(!$this -> db_conn)
         {
@@ -174,7 +174,14 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             return false;
         }
         $old_password = $row[$this -> sql_column_password];
-        $enc_password = $this -> pacrypt($password, $old_password);
+        if($this -> crypt_type == 'joomla2')
+        {
+            $hasher = new PasswordHash(10, true);
+            $enc_password = $hasher->HashPassword($password);
+        } else
+        {
+            $enc_password = $this -> pacrypt($password, $old_password);
+        }
         $query = "UPDATE $this->sql_table SET $this->sql_column_password = :enc_password WHERE $this->sql_column_username = :uid";
         OC_Log::write('OC_USER_SQL', "Preapring query: $query", OC_Log::DEBUG);
         $result = $this -> db -> prepare($query);
@@ -230,7 +237,17 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             return false;
         }
         OC_Log::write('OC_USER_SQL', "Encrypting and checking password", OC_Log::DEBUG);
-        if($this -> pacrypt($password, $row[$this -> sql_column_password]) == $row[$this -> sql_column_password])
+        // Joomla 2.5.18 switched to phPass, which doesn't play nice with the way
+        // we check passwords
+        if($this -> crypt_type == 'joomla2')
+        {
+            $hasher = new PasswordHash(10, true);
+            $ret = $hasher -> CheckPassword($password, $row[$this -> sql_column_password]);
+        } else
+        {
+            $ret = $this -> pacrypt($password, $row[$this -> sql_column_password]) == $row[$this -> sql_column_password];
+        }
+        if($ret)
         {
             OC_Log::write('OC_USER_SQL', "Passwords matching, return true", OC_Log::DEBUG);
             if($this -> strip_domain)
@@ -262,7 +279,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             return false;
         }
         $query = "SELECT $this->sql_column_username FROM $this->sql_table";
-        $search = $this->doUserDomainMapping($search);
+        $search = $this -> doUserDomainMapping($search);
         if($search != '')
             $query .= " WHERE $this->sql_column_username LIKE :search";
         if($this -> sql_column_active != '')
