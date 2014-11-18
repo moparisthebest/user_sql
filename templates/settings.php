@@ -65,7 +65,7 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
         	<table>
         		<tr><td><label for="domain_settings"><?php echo $l -> t('Domain Settings'); ?></label></td><td><table>
         			<tr><td><input type="radio" name="domain_settings" id="domain_none" value="none" <?php
-                    if($_['domain_settings'] == "")
+                    if($_['domain_settings'] == "" || $_['domain_settings'] == "none")
                         echo 'checked="checked"';
  ?>><?php echo $l->t('No Mapping') ?></td></tr>
         			<tr><td><input type="radio" name="domain_settings" id="domain_server" value="server" <?php
