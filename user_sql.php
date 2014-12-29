@@ -48,6 +48,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
     protected $domain_settings;
     protected $domain_array;
     protected $map_array;
+    protected $allow_password_change;
 
     public function __construct()
     {
@@ -65,6 +66,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $this -> sql_type = OCP\Config::getAppValue('user_sql', 'sql_type', '');
         $this -> default_domain = OCP\Config::getAppValue('user_sql', 'default_domain', '');
         $this -> strip_domain = OCP\Config::getAppValue('user_sql', 'strip_domain', 0);
+        $this -> allow_password_change = OCP\Config::getAppValue('user_sql', 'allow_password_change', 0);        
         $this -> crypt_type = OCP\Config::getAppValue('user_sql', 'crypt_type', 'md5crypt');
         $this -> domain_settings = OCP\Config::getAppValue('user_sql', 'domain_settings', 'none');
         $this -> domain_array = explode(",", OCP\Config::getAppValue('user_sql', 'domain_array', ''));
@@ -153,7 +155,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         // Update the user's password - this might affect other services, that
         // use the same database, as well
         OC_Log::write('OC_USER_SQL', "Entering setPassword for UID: $uid", OC_Log::DEBUG);
-        if(!$this -> db_conn)
+        if(!$this -> db_conn || !$this->allow_password_change)
         {
             return false;
         }

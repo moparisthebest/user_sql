@@ -42,6 +42,10 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
         <table>
             <tr><td><label for="sql_column_username"><?php echo $l -> t('Username Column'); ?></label></td><td><input type="text" id="sql_column_username" name="sql_column_username" value="<?php echo $_['sql_column_username']; ?>" /></td></tr>
             <tr><td><label for="sql_column_password"><?php echo $l -> t('Password Column'); ?></label></td><td><input type="text" id="sql_column_password" name="sql_column_password" value="<?php echo $_['sql_column_password']; ?>" /></td></tr>
+            <tr><td><label for="sql_allow_password_change"><?php echo $l -> t('Allow password changing (read README!)'); ?></label></td><td><input type="checkbox" id="allow_password_change" name="allow_password_change" value="1"<?php
+            if($_['allow_password_change'])
+                echo ' checked';
+ ?> title="Allow changing passwords. Imposes a security risk as password salts are not recreated"></td></tr>
             <tr><td><label for="sql_column_displayname"><?php echo $l -> t('Real Name Column'); ?></label></td><td><input type="text" id="sql_column_displayname" name="sql_column_displayname" value="<?php echo $_['sql_column_displayname']; ?>" /></td></tr>
             <tr><td><label for="crypt_type"><?php echo $l -> t('Encryption Type'); ?></label></td>
                 <?php $crypt_types = array('md5' => 'MD5', 'md5crypt' => 'MD5 Crypt', 'cleartext' => 'Cleartext', 'mysql_encrypt' => 'mySQL ENCRYPT()', 'system' => 'System (crypt)', 'mysql_password' => 'mySQL PASSWORD()', 'joomla' => 'Joomla MD5 Encryption', 'joomla2' => 'Joomla > 2.5.18 phpass', 'ssha256' => 'Salted SSHA256'); ?>

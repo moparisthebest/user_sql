@@ -53,6 +53,7 @@ $tmpl -> assign('sql_column_displayname', OCP\Config::getAppValue('user_sql', 's
 $tmpl -> assign('map_array', OCP\Config::getAppValue('user_sql', 'map_array', ''));
 $tmpl -> assign('domain_array', OCP\Config::getAppValue('user_sql', 'domain_array', ''));
 $tmpl -> assign('domain_settings', OCP\Config::getAppValue('user_sql', 'domain_settings', ''));
+$tmpl -> assign('allow_password_change', OCP\Config::getAppValue('user_sql', 'allow_password_change', 0));
 // workaround to detect OC version
 $ocVersion = @reset(OCP\Util::getVersion());
 $tmpl -> assign('ocVersion', $ocVersion);
