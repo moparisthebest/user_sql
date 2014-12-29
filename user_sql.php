@@ -60,7 +60,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $this -> sql_table = OCP\Config::getAppValue('user_sql', 'sql_table', '');
         $this -> sql_column_username = OCP\Config::getAppValue('user_sql', 'sql_column_username', '');
         $this -> sql_column_password = OCP\Config::getAppValue('user_sql', 'sql_column_password', '');
-        $this -> sql_column_displayname = OCP\Config::getAppValue('user_sql', 'sql_column_displayname', '');
+        $this -> sql_column_displayname = OCP\Config::getAppValue('user_sql', 'sql_column_displayname', $this->sql_column_username);
         $this -> sql_column_active = OCP\Config::getAppValue('user_sql', 'sql_column_active', '');
         $this -> sql_type = OCP\Config::getAppValue('user_sql', 'sql_type', '');
         $this -> default_domain = OCP\Config::getAppValue('user_sql', 'default_domain', '');
