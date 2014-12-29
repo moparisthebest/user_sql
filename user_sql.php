@@ -67,8 +67,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $this -> strip_domain = OCP\Config::getAppValue('user_sql', 'strip_domain', 0);
         $this -> crypt_type = OCP\Config::getAppValue('user_sql', 'crypt_type', 'md5crypt');
         $this -> domain_settings = OCP\Config::getAppValue('user_sql', 'domain_settings', 'none');
-        $this -> domain_array = explode(",", OCP\Config::getAppValue('user_sql', 'domain_array', array()));
-        $this -> map_array = explode(",", OCP\Config::getAppValue('user_sql', 'map_array', array()));
+        $this -> domain_array = explode(",", OCP\Config::getAppValue('user_sql', 'domain_array', ''));
+        $this -> map_array = explode(",", OCP\Config::getAppValue('user_sql', 'map_array', ''));
         $dsn = $this -> sql_type . ":host=" . $this -> sql_host . ";dbname=" . $this -> sql_database;
         try
         {
