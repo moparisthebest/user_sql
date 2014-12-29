@@ -9,6 +9,7 @@
  * credits go to Ed W for several SQL injection fixes and caching support
  * credits go to Frédéric France for providing Joomla support
  * credits go to Mark Jansenn for providing Joomla 2.5.18+ / 3.2.1+ support
+ * credits go to Dominik Grothaus for providing SSHA256 support and fixing a few bugs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
@@ -538,6 +539,13 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             }
             $password = ($salt) ? md5($pw . $salt) : md5($pw);
             $password .= ':' . $salt;
+		}
+
+		elseif($this-> crypt_type == 'ssha256')
+		{
+			$salted_password = base64_decode(preg_replace('/{SSHA256}/i','',$pw_db));
+			$salt = substr($salted_password,-(strlen($salted_password)-32));
+			$password = $this->ssha256($pw,$salt);
         } else
         {
             OC_Log::write('OC_USER_SQL', "unknown/invalid crypt_type settings: $this->crypt_type", OC_Log::ERROR);
@@ -630,6 +638,11 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $salt = substr(md5(rand(0, 9999999)), 0, 8);
         return $salt;
     }
+
+    private function ssha256($pw, $salt)
+	{
+	    return '{SSHA256}'.base64_encode(hash('sha256',$pw.$salt,true).$salt);
+	}
 
     private function pahex2bin($str)
     {
