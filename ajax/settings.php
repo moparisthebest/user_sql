@@ -9,7 +9,7 @@ OCP\JSON::checkAppEnabled('user_sql');
 // CSRF checks
 OCP\JSON::callCheck();
 
-$l = new OC_L10N('use_sql');
+$l = new OC_L10N('user_sql');
 
 $params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 
         'sql_table', 'sql_column_username', 'sql_column_password', 'sql_type', 
