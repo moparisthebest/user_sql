@@ -282,15 +282,10 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             return false;
         }
         $query = "SELECT $this->sql_column_username FROM $this->sql_table";
-        if($search != '')
-            $query .= " WHERE $this->sql_column_username LIKE :search";
+        $query .= " WHERE $this->sql_column_username LIKE :search";
         if($this -> sql_column_active != '')
         {
-            if($search != '')
-                $query .= " AND";
-            else
-                $query .= " WHERE";
-            $query .= " $this->sql_column_active = 1";
+            $query .= " AND $this->sql_column_active = 1";
         }
         $query .= " ORDER BY $this->sql_column_username";
         if($limit != null)
@@ -308,8 +303,13 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         if($search != '')
         {
             $search = "%".$this -> doUserDomainMapping($search."%")."%";
-            $result -> bindParam(":search", $search);
         }
+        else 
+        {
+	       $search = "%".$this -> doUserDomainMapping("")."%";   
+        }
+        $result -> bindParam(":search", $search);
+        
         OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
         if(!$result -> execute())
         {
