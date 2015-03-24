@@ -179,6 +179,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $old_password = $row[$this -> sql_column_password];
         if($this -> crypt_type == 'joomla2')
         {
+            if(!class_exists('PasswordHash')
+                require_once('PasswordHash.php');
             $hasher = new PasswordHash(10, true);
             $enc_password = $hasher->HashPassword($password);
         } else
@@ -244,6 +246,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         // we check passwords
         if($this -> crypt_type == 'joomla2')
         {
+            if(!class_exists('PasswordHash'))
+                require_once('PasswordHash.php');
             $hasher = new PasswordHash(10, true);
             $ret = $hasher -> CheckPassword($password, $row[$this -> sql_column_password]);
         } else
