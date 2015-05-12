@@ -75,7 +75,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         try
         {
             $this -> db = new PDO($dsn, $this -> sql_username, $this -> sql_password);
-            $this -> db -> query("SET NAMES UTF8");
+            $this -> db -> query("SET NAMES 'UTF8'");
             $this -> db_conn = true;
         } catch (PDOException $e)
         {
