@@ -183,6 +183,20 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
                 require_once('PasswordHash.php');
             $hasher = new PasswordHash(10, true);
             $enc_password = $hasher->HashPassword($password);
+        }         
+        // Redmine stores the salt separatedly, this doesn't play nice with the way
+        // we check passwords
+        elseif($this -> crypt_type == 'redmine')
+        {
+        	$query = "SELECT salt FROM $this->sql_table WHERE $this->sql_column_username =:uid;";
+        	$res = $this->db->prepare($query);
+			$res->bindparam(":uid", $uid);
+			if(!$res->execute())
+				return false;
+			$salt = $res->fetch();
+			if(!$salt)
+				return false;
+			$enc_password = sha1($salt['salt'].sha1($password));
         } else
         {
             $enc_password = $this -> pacrypt($password, $old_password);
@@ -250,6 +264,20 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
                 require_once('PasswordHash.php');
             $hasher = new PasswordHash(10, true);
             $ret = $hasher -> CheckPassword($password, $row[$this -> sql_column_password]);
+        } 
+        // Redmine stores the salt separatedly, this doesn't play nice with the way
+        // we check passwords
+        elseif($this -> crypt_type == 'redmine')
+        {
+        	$query = "SELECT salt FROM $this->sql_table WHERE $this->sql_column_username =:uid;";
+        	$res = $this->db->prepare($query);
+			$res->bindparam(":uid", $uid);
+			if(!$res->execute())
+				return false;
+			$salt = $res->fetch();
+			if(!$salt)
+				return false;
+			$ret = sha1($salt['salt'].sha1($password)) == $row[$this->sql_column_password];
         } else
         {
             $ret = $this -> pacrypt($password, $row[$this -> sql_column_password]) == $row[$this -> sql_column_password];

@@ -48,7 +48,7 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
  ?> title="Allow changing passwords. Imposes a security risk as password salts are not recreated"></td></tr>
             <tr><td><label for="sql_column_displayname"><?php echo $l -> t('Real Name Column'); ?></label></td><td><input type="text" id="sql_column_displayname" name="sql_column_displayname" value="<?php echo $_['sql_column_displayname']; ?>" /></td></tr>
             <tr><td><label for="crypt_type"><?php echo $l -> t('Encryption Type'); ?></label></td>
-                <?php $crypt_types = array('md5' => 'MD5', 'md5crypt' => 'MD5 Crypt', 'cleartext' => 'Cleartext', 'mysql_encrypt' => 'mySQL ENCRYPT()', 'system' => 'System (crypt)', 'mysql_password' => 'mySQL PASSWORD()', 'joomla' => 'Joomla MD5 Encryption', 'joomla2' => 'Joomla > 2.5.18 phpass', 'ssha256' => 'Salted SSHA256'); ?>
+                <?php $crypt_types = array('md5' => 'MD5', 'md5crypt' => 'MD5 Crypt', 'cleartext' => 'Cleartext', 'mysql_encrypt' => 'mySQL ENCRYPT()', 'system' => 'System (crypt)', 'mysql_password' => 'mySQL PASSWORD()', 'joomla' => 'Joomla MD5 Encryption', 'joomla2' => 'Joomla > 2.5.18 phpass', 'ssha256' => 'Salted SSHA256', 'redmine' => 'Redmine'); ?>
                 <td><select id="crypt_type" name="crypt_type">
                     <?php 
                         foreach ($crypt_types as $driver => $name):
