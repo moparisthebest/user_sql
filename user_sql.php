@@ -75,6 +75,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         try
         {
             $this -> db = new PDO($dsn, $this -> sql_username, $this -> sql_password);
+            $this -> db -> query("SET NAMES 'UTF8'");
             $this -> db_conn = true;
         } catch (PDOException $e)
         {
@@ -179,7 +180,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $old_password = $row[$this -> sql_column_password];
         if($this -> crypt_type == 'joomla2')
         {
-            if(!class_exists('PasswordHash')
+            if(!class_exists('PasswordHash'))
                 require_once('PasswordHash.php');
             $hasher = new PasswordHash(10, true);
             $enc_password = $hasher->HashPassword($password);
@@ -237,7 +238,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
 
         $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this -> sql_column_active != '')
-            $query .= " AND $this->sql_column_active = 1";
+            $query .= " AND $this->sql_column_active";
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this -> db -> prepare($query);
         $result -> bindParam(":uid", $uid);
@@ -317,7 +318,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $query .= " WHERE $this->sql_column_username LIKE :search";
         if($this -> sql_column_active != '')
         {
-            $query .= " AND $this->sql_column_active = 1";
+            $query .= " AND $this->sql_column_active";
         }
         $query .= " ORDER BY $this->sql_column_username";
         if($limit != null)
@@ -386,7 +387,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $uid = $this -> doUserDomainMapping($uid);
         $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this -> sql_column_active != '')
-            $query .= " AND $this->sql_column_active = 1";
+            $query .= " AND $this->sql_column_active";
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this -> db -> prepare($query);
         $result -> bindParam(":uid", $uid);
@@ -430,7 +431,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
 
         $query = "SELECT $this->sql_column_displayname FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this -> sql_column_active != '')
-            $query .= " AND $this->sql_column_active = 1";
+            $query .= " AND $this->sql_column_active";
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this -> db -> prepare($query);
         $result -> bindParam(":uid", $uid);
@@ -450,7 +451,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         } else
         {
             OC_Log::write('OC_USER_SQL', "User exists, return true", OC_Log::DEBUG);
-            $displayName = utf8_encode($row[$this -> sql_column_displayname]);
+            $displayName = $row[$this -> sql_column_displayname];
             return $displayName; ;
         }
         return false;
