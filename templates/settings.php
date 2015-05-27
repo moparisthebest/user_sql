@@ -63,7 +63,10 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
                 </select></td>
             </tr>
             <tr><td><label for="sql_column_active"><?php echo $l -> t('User Active Column'); ?></label></td><td><input type="text" id="sql_column_active" name="sql_column_active" value="<?php echo $_['sql_column_active']; ?>" /></td></tr>
-            <tr><td><label for="sql_column_active_invert"><?php echo $l -> t('Invert Active Value'); ?></label></td><td><input type="text" id="sql_column_active_invert" name="sql_column_active_invert" value="<?php echo $_['sql_column_active_invert']; ?>" /></td></tr>
+            <tr><td><label for="sql_column_active_invert"><?php echo $l -> t('Invert Active Value'); ?></label></td><td><input type="checkbox" id="sql_column_active_invert" name="sql_column_active_invert" value="1"<?php
+            if($_['sql_column_invert'])
+                echo ' checked';
+            ?> title="Invert the logic of the active column (for blocked users in the SQL DB)" /></td></tr>
         </table>
         </fieldset>
         <fieldset id="sql-3">
