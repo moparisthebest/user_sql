@@ -22,7 +22,8 @@
  */
 $params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 'sql_table', 
         'sql_column_username', 'sql_column_password', 'sql_type', 'sql_column_active', 
-        'strip_domain', 'default_domain', 'crypt_type', 'sql_column_displayname', 'domain_map', 'domain_settings');
+        'strip_domain', 'default_domain', 'crypt_type', 'sql_column_displayname', 
+        'domain_map', 'domain_settings', 'sql_column_active_invert');
 
 OCP\Util::addStyle('user_sql', 'settings');
 OCP\Util::addScript('user_sql', 'settings');
@@ -54,6 +55,7 @@ $tmpl -> assign('map_array', OCP\Config::getAppValue('user_sql', 'map_array', ''
 $tmpl -> assign('domain_array', OCP\Config::getAppValue('user_sql', 'domain_array', ''));
 $tmpl -> assign('domain_settings', OCP\Config::getAppValue('user_sql', 'domain_settings', ''));
 $tmpl -> assign('allow_password_change', OCP\Config::getAppValue('user_sql', 'allow_password_change', 0));
+$tmpl -> assign('sql_column_active_invert', OCP\Config::getAppValue('user_sql', 'sql_column_active_invert', 0));
 // workaround to detect OC version
 $ocVersion = @reset(OCP\Util::getVersion());
 $tmpl -> assign('ocVersion', $ocVersion);
