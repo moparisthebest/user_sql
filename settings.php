@@ -23,7 +23,8 @@
 $params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 'sql_table', 
         'sql_column_username', 'sql_column_password', 'sql_type', 'sql_column_active', 
         'strip_domain', 'default_domain', 'crypt_type', 'sql_column_displayname', 
-        'domain_map', 'domain_settings', 'sql_column_active_invert');
+        'domain_map', 'domain_settings', 'sql_column_active_invert', 'sql_column_email',
+        'mail_sync_mode');
 
 OCP\Util::addStyle('user_sql', 'settings');
 OCP\Util::addScript('user_sql', 'settings');
@@ -47,6 +48,8 @@ $tmpl -> assign('sql_column_password', OCP\Config::getAppValue('user_sql', 'sql_
 $tmpl -> assign('sql_column_username', OCP\Config::getAppValue('user_sql', 'sql_column_username', OC_USER_BACKEND_SQL_DEFAULT_USER_COLUMN));
 $tmpl -> assign('sql_type', OCP\Config::getAppValue('user_sql', 'sql_type', OC_USER_BACKEND_SQL_DEFAULT_DRIVER));
 $tmpl -> assign('sql_column_active', OCP\Config::getAppValue('user_sql', 'sql_column_active', ''));
+$tmpl -> assign('sql_column_email', OCP\Config::getAppValue('user_sql', 'sql_column_email', ''));
+$tmpl -> assign('mail_sync_mode', OCP\Config::getAppValue('user_sql', 'mail_sync_mode', 'none'));
 $tmpl -> assign('strip_domain', OCP\Config::getAppValue('user_sql', 'strip_domain', 0));
 $tmpl -> assign('default_domain', OCP\Config::getAppValue('user_sql', 'default_domain', ''));
 $tmpl -> assign('crypt_type', OCP\Config::getAppValue('user_sql', 'crypt_type', 'mysql_encrypt'));

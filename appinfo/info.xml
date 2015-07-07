@@ -4,7 +4,7 @@
        <name>SQL user backend</name>
        <description>Authenticate Users by SQL</description>
        <licence>AGPL</licence>
-       <author>Andreas Boehler &lt;andreas (at) aboehler 
+       <author>Andreas Boehler &lt;dev (at) aboehler 
 (dot) at &gt;</author>
        <require>5.0</require>
        <shipped>false</shipped>

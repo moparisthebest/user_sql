@@ -27,7 +27,7 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
                                 <option value="<?php echo $driver; ?>"><?php echo $name; ?></option>
                             <?php endif;
                                     endforeach;
- ?>
+                            ?>
                 </select></td>
             </tr>
 
@@ -58,8 +58,8 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
                             <?php else: ?>
                                 <option value="<?php echo $driver; ?>"><?php echo $name; ?></option>
                             <?php endif;
-                                    endforeach;
- ?>
+                        endforeach;
+                    ?>
                 </select></td>
             </tr>
             <tr><td><label for="sql_column_active"><?php echo $l -> t('User Active Column'); ?></label></td><td><input type="text" id="sql_column_active" name="sql_column_active" value="<?php echo $_['sql_column_active']; ?>" /></td></tr>
@@ -67,6 +67,22 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
             if($_['sql_column_active_invert'])
                 echo ' checked';
             ?> title="Invert the logic of the active column (for blocked users in the SQL DB)" /></td></tr>
+            <tr><td><label for="sql_column_email"><?php echo $l -> t('E-Mail Column'); ?></label></td><td><input type="text" id="sql_column_email" name="sql_column_email" value="<?php echo $_['sql_column_email']; ?>" /></td></tr>
+            <tr><td><label for="mail_sync_mode"><?php echo $l -> t('E-Mail address sync mode'); ?></label></td>
+                <?php $mail_modes = array('none' => 'No Synchronisation', 'initial' => 'Synchronise only once', 'forceoc' => 'ownCloud always wins', 'forcesql' => 'SQL always wins'); ?>
+                <td><select id="mail_sync_mode" name="mail_sync_mode">
+                    <?php
+                    foreach ($mail_modes as $mode => $name):
+                        echo $_['mail_sync_mode'];
+                        if($_['mail_sync_mode'] == $mode): ?>
+                            <option selected="selected" value="<?php echo $mode; ?>"><?php echo $name; ?></option>
+                        <?php else: ?>
+                            <option value="<?php echo $mode; ?>"><?php echo $name; ?></option>
+                        <?php endif;
+                    endforeach;
+                    ?>
+                </select>
+            </td></tr>
         </table>
         </fieldset>
         <fieldset id="sql-3">
@@ -75,19 +91,19 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
         			<tr><td><input type="radio" name="domain_settings" id="domain_none" value="none" <?php
                     if($_['domain_settings'] == "" || $_['domain_settings'] == "none")
                         echo 'checked="checked"';
- ?>><?php echo $l->t('No Mapping') ?></td></tr>
+                    ?>><?php echo $l->t('No Mapping') ?></td></tr>
         			<tr><td><input type="radio" name="domain_settings" id="domain_server" value="server" <?php
                     if($_['domain_settings'] == "server")
                         echo 'checked="checked"';
- ?>><?php echo $l->t('Append Server Hostname') ?></td><td></td></tr>        			
+                    ?>><?php echo $l->t('Append Server Hostname') ?></td><td></td></tr>        			
         			<tr><td><input type="radio" name="domain_settings" id="domain_default" value="default" <?php
                     if($_['domain_settings'] == "default")
                         echo 'checked="checked"';
- ?>><?php echo $l->t('Append Default') ?></td><td><input type="text" id="default_domain" name="default_domain" value="<?php echo $_['default_domain']; ?>" /></td></tr>
+                    ?>><?php echo $l->t('Append Default') ?></td><td><input type="text" id="default_domain" name="default_domain" value="<?php echo $_['default_domain']; ?>" /></td></tr>
         			<tr><td><input type="radio" name="domain_settings" id="domain_mapping" value="mapping" <?php
                     if($_['domain_settings'] == "mapping")
                         echo 'checked="checked"';
- ?>><?php echo $l->t('Map Domains') ?></td><td>
+                    ?>><?php echo $l->t('Map Domains') ?></td><td>
         					<table id="domain_map_entries" cellspacing="2" cellpadding="2">
     							<tbody>
     								<tr><th><input type="text" placeholder="Server Domain" id="inputServerDomain"></th><th><input type="text" placeholder="Map to Domain" id="inputMapDomain"></th><th><input id="domainAddMap" type="submit" value="<?php echo $l -> t('Add Entry'); ?>" /></th></tr>
@@ -105,7 +121,7 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
             <tr><td><label for="strip_domain"><?php echo $l -> t('Strip Domain Part from Username'); ?></label></td><td><input type="checkbox" id="strip_domain" name="strip_domain" value="1"<?php
             if($_['strip_domain'])
                 echo ' checked';
- ?> title="Strip Domain Part from Username when logging in and retrieving username lists"></td></tr>
+            ?> title="Strip Domain Part from Username when logging in and retrieving username lists"></td></tr>
 	
         	</table>
         </fieldset>

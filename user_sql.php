@@ -4,7 +4,7 @@
  * ownCloud - user_sql
  *
  * @author Andreas Böhler and contributors
- * @copyright 2012/2013 Andreas Böhler <andreas (at) aboehler (dot) at>
+ * @copyright 2012-2015 Andreas Böhler <dev (at) aboehler (dot) at>
  *
  * credits go to Ed W for several SQL injection fixes and caching support
  * credits go to Frédéric France for providing Joomla support
@@ -40,6 +40,8 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
     protected $sql_column_active;
     protected $sql_column_active_invert;
     protected $sql_column_displayname;
+    protected $sql_column_email;
+    protected $mail_sync_mode;
     protected $sql_type;
     protected $db_conn;
     protected $db;
@@ -63,6 +65,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $this -> sql_column_username = OCP\Config::getAppValue('user_sql', 'sql_column_username', '');
         $this -> sql_column_password = OCP\Config::getAppValue('user_sql', 'sql_column_password', '');
         $this -> sql_column_displayname = OCP\Config::getAppValue('user_sql', 'sql_column_displayname', $this->sql_column_username);
+        $this -> sql_column_email = OCP\Config::getAppValue('user_sql', 'sql_column_email', '');
         $this -> sql_column_active = OCP\Config::getAppValue('user_sql', 'sql_column_active', '');
         $this -> sql_column_active_invert = OCP\Config::getAppValue('user_sql', 'sql_column_active_invert', 0);
         $this -> sql_type = OCP\Config::getAppValue('user_sql', 'sql_type', '');
@@ -73,6 +76,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $this -> domain_settings = OCP\Config::getAppValue('user_sql', 'domain_settings', 'none');
         $this -> domain_array = explode(",", OCP\Config::getAppValue('user_sql', 'domain_array', ''));
         $this -> map_array = explode(",", OCP\Config::getAppValue('user_sql', 'map_array', ''));
+        $this -> mail_sync_mode = OCP\Config::getAppValue('user_sql', 'mail_sync_mode', 'none');
         $dsn = $this -> sql_type . ":host=" . $this -> sql_host . ";dbname=" . $this -> sql_database;
         try
         {
@@ -84,6 +88,68 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             OC_Log::write('OC_USER_SQL', 'Failed to connect to the database: ' . $e -> getMessage(), OC_Log::ERROR);
         }
         return false;
+    }
+
+    private function doEmailSync($uid)
+    {
+        OC_Log::write('OC_USER_SQL', "Entering doEmailSync for UID: $uid", OC_Log::DEBUG);
+        if($this -> sql_column_email === '')
+            return false;
+        
+        if($this -> mail_sync_mode == 'none')
+            return false;
+            
+        $ocUid = $uid;
+        $uid = $this -> doUserDomainMapping($uid);
+
+        $query = "SELECT $this->sql_column_email FROM $this->sql_table WHERE $this->sql_column_username = :uid";
+        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
+        $result = $this -> db -> prepare($query);
+        $result -> bindParam(":uid", $uid);
+        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+        if(!$result -> execute())
+        {
+            return false;
+        }
+        OC_Log::write('OC_USER_SQL', "Fetching result...", OC_Log::DEBUG);
+        $row = $result -> fetch();
+        if(!$row)
+        {
+            return false;
+        }
+        $newMail = $row[$this -> sql_column_email];
+        $currMail = OCP\Config::getUserValue($ocUid, 'settings', 'email', '');
+        
+        switch($this -> mail_sync_mode)
+        {
+            case 'initial':
+                if($currMail === '')
+                    OCP\Config::setUserValue($ocUid, 'settings', 'email', $newMail);
+                break;
+            case 'forcesql':
+                if($currMail != $newMail)
+                    OCP\Config::setUserValue($ocUid, 'settings', 'email', $newMail);
+                break;
+            case 'forceoc':
+                if(($currMail !== '') && ($currMail != $newMail))
+                {
+                    $query = "UPDATE $this->sql_table SET $this->sql_column_email = :currMail WHERE $this->sql_column_username = :uid";
+                    OC_Log::write('OC_USER_SQL', "Preapring query: $query", OC_Log::DEBUG);
+                    $result = $this -> db -> prepare($query);
+                    $result -> bindParam(":currMail", $currMail);
+                    $result -> bindParam(":uid", $uid);
+                    OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+                    if(!$result -> execute())
+                    {
+                        $err = $result -> errorInfo();
+                        OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
+                        OC_Log::write('OC_USER_SQL', "Could not update E-Mail address in SQL database!", OC_Log::ERROR);
+                    }
+                }
+                break;
+        }
+        
+        return true;
     }
 
     private function doUserDomainMapping($uid)
@@ -422,6 +488,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         {
             return false;
         }
+        $this -> doEmailSync($uid);
         $uid = $this -> doUserDomainMapping($uid);
 
         if(!$this -> userExists($uid))
