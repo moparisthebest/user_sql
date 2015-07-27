@@ -102,7 +102,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         if($this -> sql_column_email === '')
             return false;
         
-        if($this -> mail_sync_mode == 'none')
+        if($this -> mail_sync_mode === 'none')
             return false;
             
         $ocUid = $uid;
@@ -133,11 +133,11 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
                     OCP\Config::setUserValue($ocUid, 'settings', 'email', $newMail);
                 break;
             case 'forcesql':
-                if($currMail != $newMail)
+                if($currMail !== $newMail)
                     OCP\Config::setUserValue($ocUid, 'settings', 'email', $newMail);
                 break;
             case 'forceoc':
-                if(($currMail !== '') && ($currMail != $newMail))
+                if(($currMail !== '') && ($currMail !== $newMail))
                 {
                     $query = "UPDATE $this->sql_table SET $this->sql_column_email = :currMail WHERE $this->sql_column_username = :uid";
                     OC_Log::write('OC_USER_SQL', "Preapring query: $query", OC_Log::DEBUG);
@@ -181,7 +181,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
                     for($i = 0; $i < count($this -> domain_array); $i++)
                     {
                         OC_Log::write('OC_USER_SQL', 'Checking domain in mapping: ' . $this -> domain_array[$i], OC_Log::DEBUG);
-                        if($_SERVER['SERVER_NAME'] == trim($this -> domain_array[$i]))
+                        if($_SERVER['SERVER_NAME'] === trim($this -> domain_array[$i]))
                         {
                             OC_Log::write('OC_USER_SQL', 'Found domain in mapping: ' . $this -> domain_array[$i], OC_Log::DEBUG);
                             $uid .= "@" . trim($this -> map_array[$i]);
@@ -252,7 +252,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             return false;
         }
         $old_password = $row[$this -> sql_column_password];
-        if($this -> crypt_type == 'joomla2')
+        if($this -> crypt_type === 'joomla2')
         {
             if(!class_exists('PasswordHash'))
                 require_once('PasswordHash.php');
@@ -261,7 +261,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         }         
         // Redmine stores the salt separatedly, this doesn't play nice with the way
         // we check passwords
-        elseif($this -> crypt_type == 'redmine')
+        elseif($this -> crypt_type === 'redmine')
         {
         	$query = "SELECT salt FROM $this->sql_table WHERE $this->sql_column_username =:uid;";
         	$res = $this->db->prepare($query);
@@ -311,7 +311,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $uid = $this -> doUserDomainMapping($uid);
 
         $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
-        if($this -> sql_column_active != '')
+        if($this -> sql_column_active !== '')
             $query .= " AND " .($this->sql_column_active_invert ? "NOT " : "" ).$this->sql_column_active;
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this -> db -> prepare($query);
@@ -333,7 +333,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         OC_Log::write('OC_USER_SQL', "Encrypting and checking password", OC_Log::DEBUG);
         // Joomla 2.5.18 switched to phPass, which doesn't play nice with the way
         // we check passwords
-        if($this -> crypt_type == 'joomla2')
+        if($this -> crypt_type === 'joomla2')
         {
             if(!class_exists('PasswordHash'))
                 require_once('PasswordHash.php');
@@ -342,7 +342,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         } 
         // Redmine stores the salt separatedly, this doesn't play nice with the way
         // we check passwords
-        elseif($this -> crypt_type == 'redmine')
+        elseif($this -> crypt_type === 'redmine')
         {
         	$query = "SELECT salt FROM $this->sql_table WHERE $this->sql_column_username =:uid;";
         	$res = $this->db->prepare($query);
@@ -352,10 +352,10 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
 			$salt = $res->fetch();
 			if(!$salt)
 				return false;
-			$ret = sha1($salt['salt'].sha1($password)) == $row[$this->sql_column_password];
+			$ret = sha1($salt['salt'].sha1($password)) === $row[$this->sql_column_password];
         } else
         {
-            $ret = $this -> pacrypt($password, $row[$this -> sql_column_password]) == $row[$this -> sql_column_password];
+            $ret = $this -> pacrypt($password, $row[$this -> sql_column_password]) === $row[$this -> sql_column_password];
         }
         if($ret)
         {
@@ -390,22 +390,22 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         }
         $query = "SELECT $this->sql_column_username FROM $this->sql_table";
         $query .= " WHERE $this->sql_column_username LIKE :search";
-        if($this -> sql_column_active != '')
+        if($this -> sql_column_active !== '')
             $query .= " AND " .($this->sql_column_active_invert ? "NOT " : "" ).$this->sql_column_active;
         $query .= " ORDER BY $this->sql_column_username";
-        if($limit != null)
+        if($limit !== null)
         {
             $limit = intval($limit);
             $query .= " LIMIT $limit";
         }
-        if($offset != null)
+        if($offset !== null)
         {
             $offset = intval($offset);
             $query .= " OFFSET $offset";
         }
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this -> db -> prepare($query);
-        if($search != '')
+        if($search !== '')
         {
             $search = "%".$this -> doUserDomainMapping($search."%")."%";
         }
@@ -458,7 +458,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         }
         $uid = $this -> doUserDomainMapping($uid);
         $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = :uid";
-        if($this -> sql_column_active != '')
+        if($this -> sql_column_active !== '')
             $query .= " AND " .($this->sql_column_active_invert ? "NOT " : "" ).$this->sql_column_active;
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this -> db -> prepare($query);
@@ -503,7 +503,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         }
 
         $query = "SELECT $this->sql_column_displayname FROM $this->sql_table WHERE $this->sql_column_username = :uid";
-        if($this -> sql_column_active != '')
+        if($this -> sql_column_active !== '')
             $query .= " AND " .($this->sql_column_active_invert ? "NOT " : "" ).$this->sql_column_active;
         OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
         $result = $this -> db -> prepare($query);
@@ -562,7 +562,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $password = "";
         $salt = "";
 
-        if($this -> crypt_type == 'md5crypt')
+        if($this -> crypt_type === 'md5crypt')
         {
             $split_salt = preg_split('/\$/', $pw_db);
             if(isset($split_salt[2]))
@@ -570,14 +570,14 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
                 $salt = $split_salt[2];
             }
             $password = $this -> md5crypt($pw, $salt);
-        } elseif($this -> crypt_type == 'md5')
+        } elseif($this -> crypt_type === 'md5')
         {
             $password = md5($pw);
-        } elseif($this -> crypt_type == 'system')
+        } elseif($this -> crypt_type === 'system')
         {
             // We never generate salts, as user creation is not allowed here
             $password = crypt($pw, $pw_db);
-        } elseif($this -> crypt_type == 'cleartext')
+        } elseif($this -> crypt_type === 'cleartext')
         {
             $password = $pw;
         }
@@ -585,13 +585,13 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         // See
         // https://sourceforge.net/tracker/?func=detail&atid=937966&aid=1793352&group_id=191583
         // this is apparently useful for pam_mysql etc.
-        elseif($this -> crypt_type == 'mysql_encrypt')
+        elseif($this -> crypt_type === 'mysql_encrypt')
         {
             if(!$this -> db_conn)
             {
                 return false;
             }
-            if($pw_db != "")
+            if($pw_db !== "")
             {
                 $salt = substr($pw_db, 0, 2);
                 $query = "SELECT ENCRYPT(:pw, :salt);";
@@ -602,7 +602,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
 
             $result = $this -> db -> prepare($query);
             $result -> bindParam(":pw", $pw);
-            if($pw_db != "")
+            if($pw_db !== "")
                 $result -> bindParam(":salt", $salt);
             if(!$result -> execute())
             {
@@ -614,7 +614,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
                 return false;
             }
             $password = $row[0];
-        } elseif($this -> crypt_type == 'mysql_password')
+        } elseif($this -> crypt_type === 'mysql_password')
         {
             if(!$this -> db_conn)
             {
@@ -637,7 +637,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         }
 
         // The following is by Frédéric France
-        elseif($this -> crypt_type == 'joomla')
+        elseif($this -> crypt_type === 'joomla')
         {
             $split_salt = preg_split('/:/', $pw_db);
             if(isset($split_salt[1]))
@@ -648,7 +648,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             $password .= ':' . $salt;
 		}
 
-		elseif($this-> crypt_type == 'ssha256')
+		elseif($this-> crypt_type === 'ssha256')
 		{
 			$salted_password = base64_decode(preg_replace('/{SSHA256}/i','',$pw_db));
 			$salt = substr($salted_password,-(strlen($salted_password)-32));
@@ -672,12 +672,12 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
     {
         $MAGIC = "$1$";
 
-        if($magic == "")
+        if($magic === "")
             $magic = $MAGIC;
-        if($salt == "")
+        if($salt === "")
             $salt = $this -> create_salt();
         $slist = explode("$", $salt);
-        if($slist[0] == "1")
+        if($slist[0] === "1")
             $salt = $slist[1];
 
         $salt = substr($salt, 0, 8);

@@ -18,7 +18,7 @@ $params = array('sql_host', 'sql_user', 'sql_database', 'sql_password',
         'allow_password_change', 'sql_column_active_invert', 'sql_column_email',
         'mail_sync_mode');
 
-if(isset($_POST['appname']) && $_POST['appname'] == "user_sql")
+if(isset($_POST['appname']) && $_POST['appname'] === "user_sql")
 {
     foreach($params as $param)
     {

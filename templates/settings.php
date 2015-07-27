@@ -21,7 +21,7 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
                     <?php 
                         foreach ($db_driver as $driver => $name):
                             echo $_['sql_type'];
-                            if($_['sql_type'] == $driver): ?>
+                            if($_['sql_type'] === $driver): ?>
                                 <option selected="selected" value="<?php echo $driver; ?>"><?php echo $name; ?></option>
                             <?php else: ?>
                                 <option value="<?php echo $driver; ?>"><?php echo $name; ?></option>
@@ -53,7 +53,7 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
                     <?php 
                         foreach ($crypt_types as $driver => $name):
                             echo $_['crypt_type'];
-                            if($_['crypt_type'] == $driver): ?>
+                            if($_['crypt_type'] === $driver): ?>
                                 <option selected="selected" value="<?php echo $driver; ?>"><?php echo $name; ?></option>
                             <?php else: ?>
                                 <option value="<?php echo $driver; ?>"><?php echo $name; ?></option>
@@ -74,7 +74,7 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
                     <?php
                     foreach ($mail_modes as $mode => $name):
                         echo $_['mail_sync_mode'];
-                        if($_['mail_sync_mode'] == $mode): ?>
+                        if($_['mail_sync_mode'] === $mode): ?>
                             <option selected="selected" value="<?php echo $mode; ?>"><?php echo $name; ?></option>
                         <?php else: ?>
                             <option value="<?php echo $mode; ?>"><?php echo $name; ?></option>
@@ -89,19 +89,19 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
         	<table>
         		<tr><td><label for="domain_settings"><?php echo $l -> t('Domain Settings'); ?></label></td><td><table>
         			<tr><td><input type="radio" name="domain_settings" id="domain_none" value="none" <?php
-                    if($_['domain_settings'] == "" || $_['domain_settings'] == "none")
+                    if($_['domain_settings'] === "" || $_['domain_settings'] === "none")
                         echo 'checked="checked"';
                     ?>><?php echo $l->t('No Mapping') ?></td></tr>
         			<tr><td><input type="radio" name="domain_settings" id="domain_server" value="server" <?php
-                    if($_['domain_settings'] == "server")
+                    if($_['domain_settings'] === "server")
                         echo 'checked="checked"';
                     ?>><?php echo $l->t('Append Server Hostname') ?></td><td></td></tr>        			
         			<tr><td><input type="radio" name="domain_settings" id="domain_default" value="default" <?php
-                    if($_['domain_settings'] == "default")
+                    if($_['domain_settings'] === "default")
                         echo 'checked="checked"';
                     ?>><?php echo $l->t('Append Default') ?></td><td><input type="text" id="default_domain" name="default_domain" value="<?php echo $_['default_domain']; ?>" /></td></tr>
         			<tr><td><input type="radio" name="domain_settings" id="domain_mapping" value="mapping" <?php
-                    if($_['domain_settings'] == "mapping")
+                    if($_['domain_settings'] === "mapping")
                         echo 'checked="checked"';
                     ?>><?php echo $l->t('Map Domains') ?></td><td>
         					<table id="domain_map_entries" cellspacing="2" cellpadding="2">
@@ -111,7 +111,7 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
                                         $maps = explode(",", $_['map_array']);
                                         for($i = 0; $i < count($domains); $i++)
                                         {
-                                            if(trim($domains[$i]) != "" && trim($domains[$i]) != "")
+                                            if(trim($domains[$i]) !== "" && trim($domains[$i]) !== "")
                                                 echo "<tr><td>" . htmlspecialchars($domains[$i]) . "</td><td>" . htmlspecialchars($maps[$i]) . "</td><td><a class=\"deleteLink\" href=\"#\" >delete</a></td></tr>";
                                         }
 									?>
