@@ -2,134 +2,107 @@
 $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
 ?>
 
+<div class="<?php p($cfgClass); ?>">
+    <h2><?php p($l->t('SQL')); ?></h2>
 
-<form id="sqlForm" action="#" method="post" class="<?php echo $cfgClass; ?>">
+<form id="sqlForm" action="#" method="post" class="<?php p($cfgClass); ?>">
 
-    <div id="sql" class="<?php echo $cfgClass; ?>">
-        <legend><strong><?php echo $l -> t('SQL'); ?></strong></legend>
-	<ul>
-	  <li><a id="sqlBasicSettings" href="#sql-1"><?php echo $l -> t('Database Settings'); ?></a></li>
-          <li><a id="sqlAdvSettings" href="#sql-2"><?php echo $l -> t('Column/Password Settings'); ?></a></li>
-          <li><a id="sqlDomainSettings" href="#sql-3"><?php echo $l -> t('Domain Settings'); ?></a></li>
-        </ul>
+    <div id="sql" class="<?php p($cfgClass); ?>">
+    <label for="sql_domain_chooser"><?php p($l -> t('Settings for Domain')) ?></label>
+    <select id="sql_domain_chooser" name="sql_domain_chooser">
+        <?php foreach ($_['allowed_domains'] as $domain): ?>
+            <option value="<?php p($domain); ?>"><?php p($domain); ?></option>
+        <?php endforeach ?>
+    </select>
+    <ul>
+      <li><a id="sqlBasicSettings" href="#sql-1"><?php p($l -> t('Basic Settings')); ?></a></li>
+      <li><a id="sqlAdvSettings" href="#sql-2"><?php p($l -> t('Advanced Settings')); ?></a></li>
+    </ul>
 
         <fieldset id="sql-1">
            <table>
-           <tr><td><label for="sql_type"><?php echo $l -> t('SQL Driver'); ?></label></td>
+           <tr><td><label for="sql_driver"><?php p($l -> t('SQL Driver')); ?></label></td>
                 <?php $db_driver = array('mysql' => 'MySQL', 'pgsql' => 'PostgreSQL'); ?>
-                <td><select id="sql_type" name="sql_type">
+                <td><select id="sql_driver" name="sql_driver">
                     <?php 
                         foreach ($db_driver as $driver => $name):
-                            echo $_['sql_type'];
-                            if($_['sql_type'] === $driver): ?>
-                                <option selected="selected" value="<?php echo $driver; ?>"><?php echo $name; ?></option>
+                            //echo $_['sql_driver'];
+                            if($_['sql_driver'] === $driver): ?>
+                                <option selected="selected" value="<?php p($driver); ?>"><?php p($name); ?></option>
                             <?php else: ?>
-                                <option value="<?php echo $driver; ?>"><?php echo $name; ?></option>
-                            <?php endif;
-                                    endforeach;
-                            ?>
-                </select></td>
-            </tr>
-
-            <tr><td><label for="sql_host"><?php echo $l -> t('Host'); ?></label></td><td><input type="text" id="sql_host" name="sql_host" value="<?php echo $_['sql_host']; ?>"></td></tr>
-            <tr><td><label for="sql_user"><?php echo $l -> t('Username'); ?></label></td><td><input type="text" id="sql_user" name="sql_user" value="<?php echo $_['sql_user']; ?>" /></td></tr>
-            <tr><td><label for="sql_database"><?php echo $l -> t('Database'); ?></label></td><td><input type="text" id="sql_database" name="sql_database" value="<?php echo $_['sql_database']; ?>" /></td></tr>
-            <tr><td><label for="sql_password"><?php echo $l -> t('Password'); ?></label></td><td><input type="password" id="sql_password" name="sql_password" value="<?php echo $_['sql_password']; ?>" /></td></tr>
-            <tr><td><label for="sql_table"><?php echo $l -> t('Table'); ?></label></td><td><input type="text" id="sql_table" name="sql_table" value="<?php echo $_['sql_table']; ?>" /></td></tr>
-        </table>
-        </fieldset>
-        <fieldset id="sql-2">
-        <table>
-            <tr><td><label for="sql_column_username"><?php echo $l -> t('Username Column'); ?></label></td><td><input type="text" id="sql_column_username" name="sql_column_username" value="<?php echo $_['sql_column_username']; ?>" /></td></tr>
-            <tr><td><label for="sql_column_password"><?php echo $l -> t('Password Column'); ?></label></td><td><input type="text" id="sql_column_password" name="sql_column_password" value="<?php echo $_['sql_column_password']; ?>" /></td></tr>
-            <tr><td><label for="sql_allow_password_change"><?php echo $l -> t('Allow password changing (read README!)'); ?></label></td><td><input type="checkbox" id="allow_password_change" name="allow_password_change" value="1"<?php
-            if($_['allow_password_change'])
-                echo ' checked';
- ?> title="Allow changing passwords. Imposes a security risk as password salts are not recreated"></td></tr>
-            <tr><td><label for="sql_column_displayname"><?php echo $l -> t('Real Name Column'); ?></label></td><td><input type="text" id="sql_column_displayname" name="sql_column_displayname" value="<?php echo $_['sql_column_displayname']; ?>" /></td></tr>
-            <tr><td><label for="crypt_type"><?php echo $l -> t('Encryption Type'); ?></label></td>
-                <?php $crypt_types = array('md5' => 'MD5', 'md5crypt' => 'MD5 Crypt', 'cleartext' => 'Cleartext', 'mysql_encrypt' => 'mySQL ENCRYPT()', 'system' => 'System (crypt)', 'mysql_password' => 'mySQL PASSWORD()', 'joomla' => 'Joomla MD5 Encryption', 'joomla2' => 'Joomla > 2.5.18 phpass', 'ssha256' => 'Salted SSHA256', 'redmine' => 'Redmine'); ?>
-                <td><select id="crypt_type" name="crypt_type">
-                    <?php 
-                        foreach ($crypt_types as $driver => $name):
-                            echo $_['crypt_type'];
-                            if($_['crypt_type'] === $driver): ?>
-                                <option selected="selected" value="<?php echo $driver; ?>"><?php echo $name; ?></option>
-                            <?php else: ?>
-                                <option value="<?php echo $driver; ?>"><?php echo $name; ?></option>
+                                <option value="<?php p($driver); ?>"><?php p($name); ?></option>
                             <?php endif;
                         endforeach;
                     ?>
                 </select></td>
             </tr>
-            <tr><td><label for="sql_column_active"><?php echo $l -> t('User Active Column'); ?></label></td><td><input type="text" id="sql_column_active" name="sql_column_active" value="<?php echo $_['sql_column_active']; ?>" /></td></tr>
-            <tr><td><label for="sql_column_active_invert"><?php echo $l -> t('Invert Active Value'); ?></label></td><td><input type="checkbox" id="sql_column_active_invert" name="sql_column_active_invert" value="1"<?php
-            if($_['sql_column_active_invert'])
-                echo ' checked';
+
+            <tr><td><label for="sql_hostname"><?php p($l -> t('Host')); ?></label></td><td><input type="text" id="sql_hostname" name="sql_hostname" value="<?php p($_['sql_hostname']); ?>"></td></tr>
+            <tr><td><label for="sql_username"><?php p($l -> t('Username')); ?></label></td><td><input type="text" id="sql_username" name="sql_username" value="<?php p($_['sql_username']); ?>" /></td></tr>
+            <tr><td><label for="sql_database"><?php p($l -> t('Database')); ?></label></td><td><input type="text" id="sql_database" name="sql_database" value="<?php p($_['sql_database']); ?>" /></td></tr>
+            <tr><td><label for="sql_password"><?php p($l -> t('Password')); ?></label></td><td><input type="password" id="sql_password" name="sql_password" value="<?php p($_['sql_password']); ?>" /></td></tr>
+            <tr><td><label for="sql_table"><?php p($l -> t('Table')); ?></label></td><td><input type="text" id="sql_table" name="sql_table" value="<?php p($_['sql_table']); ?>" /></td></tr>
+        </table>
+        </fieldset>
+        <fieldset id="sql-2">
+        <table>
+            <tr><td><label for="col_username"><?php p($l -> t('Username Column')); ?></label></td><td><input type="text" id="col_username" name="col_username" value="<?php p($_['col_username']); ?>" /></td></tr>
+            <tr><td><label for="col_password"><?php p($l -> t('Password Column')); ?></label></td><td><input type="text" id="col_password" name="col_password" value="<?php p($_['col_password']); ?>" /></td></tr>
+            <tr><td><label for="set_allow_pwchange"><?php p($l -> t('Allow password changing (read README!)')); ?></label></td><td><input type="checkbox" id="set_allow_pwchange" name="set_allow_pwchange" value="1"<?php
+            if($_['set_allow_pwchange'])
+                p(' checked');
+ ?> title="Allow changing passwords. Imposes a security risk as password salts are not recreated"></td></tr>
+            <tr><td><label for="col_displayname"><?php p($l -> t('Real Name Column')); ?></label></td><td><input type="text" id="col_displayname" name="col_displayname" value="<?php p($_['col_displayname']); ?>" /></td></tr>
+            <tr><td><label for="set_crypt_type"><?php p($l -> t('Encryption Type')); ?></label></td>
+                <?php $crypt_types = array('md5' => 'MD5', 'md5crypt' => 'MD5 Crypt', 'cleartext' => 'Cleartext', 'mysql_encrypt' => 'mySQL ENCRYPT()', 'system' => 'System (crypt)', 'mysql_password' => 'mySQL PASSWORD()', 'joomla' => 'Joomla MD5 Encryption', 'joomla2' => 'Joomla > 2.5.18 phpass', 'ssha256' => 'Salted SSHA256', 'redmine' => 'Redmine'); ?>
+                <td><select id="set_crypt_type" name="set_crypt_type">
+                    <?php 
+                        foreach ($crypt_types as $driver => $name):
+                            //echo $_['set_crypt_type'];
+                            if($_['set_crypt_type'] === $driver): ?>
+                                <option selected="selected" value="<?php p($driver); ?>"><?php p($name); ?></option>
+                            <?php else: ?>
+                                <option value="<?php p($driver); ?>"><?php p($name); ?></option>
+                            <?php endif;
+                        endforeach;
+                    ?>
+                </select></td>
+            </tr>
+            <tr><td><label for="col_active"><?php p($l -> t('User Active Column')); ?></label></td><td><input type="text" id="col_active" name="col_active" value="<?php p($_['col_active']); ?>" /></td></tr>
+            <tr><td><label for="set_active_invert"><?php p($l -> t('Invert Active Value')); ?></label></td><td><input type="checkbox" id="set_active_invert" name="set_active_invert" value="1"<?php
+            if($_['set_active_invert'])
+                p(' checked');
             ?> title="Invert the logic of the active column (for blocked users in the SQL DB)" /></td></tr>
-            <tr><td><label for="sql_column_email"><?php echo $l -> t('E-Mail Column'); ?></label></td><td><input type="text" id="sql_column_email" name="sql_column_email" value="<?php echo $_['sql_column_email']; ?>" /></td></tr>
-            <tr><td><label for="mail_sync_mode"><?php echo $l -> t('E-Mail address sync mode'); ?></label></td>
+            <tr><td><label for="col_email"><?php p($l -> t('E-Mail Column')); ?></label></td><td><input type="text" id="col_email" name="col_email" value="<?php p($_['col_email']); ?>" /></td></tr>
+            <tr><td><label for="set_mail_sync_mode"><?php p($l -> t('E-Mail address sync mode')); ?></label></td>
                 <?php $mail_modes = array('none' => 'No Synchronisation', 'initial' => 'Synchronise only once', 'forceoc' => 'ownCloud always wins', 'forcesql' => 'SQL always wins'); ?>
-                <td><select id="mail_sync_mode" name="mail_sync_mode">
+                <td><select id="set_mail_sync_mode" name="set_mail_sync_mode">
                     <?php
                     foreach ($mail_modes as $mode => $name):
-                        echo $_['mail_sync_mode'];
-                        if($_['mail_sync_mode'] === $mode): ?>
-                            <option selected="selected" value="<?php echo $mode; ?>"><?php echo $name; ?></option>
+                        //echo $_['set_mail_sync_mode'];
+                        if($_['set_mail_sync_mode'] === $mode): ?>
+                            <option selected="selected" value="<?php p($mode); ?>"><?php p($name); ?></option>
                         <?php else: ?>
-                            <option value="<?php echo $mode; ?>"><?php echo $name; ?></option>
+                            <option value="<?php p($mode); ?>"><?php p($name); ?></option>
                         <?php endif;
                     endforeach;
                     ?>
                 </select>
             </td></tr>
+            <tr><td><label for="set_default_domain"><?php p($l -> t('Append Default Domain')); ?></label></td><td><input type="text" id="set_default_domain", name="set_default_domain" value="<?php p($_['set_default_domain']); ?>" /></td></tr>
+            <tr><td><label for="set_strip_domain"><?php p($l -> t('Strip Domain Part from Username')); ?></label></td><td><input type="checkbox" id="set_strip_domain" name="set_strip_domain" value="1"<?php
+            if($_['set_strip_domain'])
+                p(' checked');
+            ?> title="Strip Domain Part from Username when logging in and retrieving username lists"></td></tr>            
         </table>
         </fieldset>
-        <fieldset id="sql-3">
-        	<table>
-        		<tr><td><label for="domain_settings"><?php echo $l -> t('Domain Settings'); ?></label></td><td><table>
-        			<tr><td><input type="radio" name="domain_settings" id="domain_none" value="none" <?php
-                    if($_['domain_settings'] === "" || $_['domain_settings'] === "none")
-                        echo 'checked="checked"';
-                    ?>><?php echo $l->t('No Mapping') ?></td></tr>
-        			<tr><td><input type="radio" name="domain_settings" id="domain_server" value="server" <?php
-                    if($_['domain_settings'] === "server")
-                        echo 'checked="checked"';
-                    ?>><?php echo $l->t('Append Server Hostname') ?></td><td></td></tr>        			
-        			<tr><td><input type="radio" name="domain_settings" id="domain_default" value="default" <?php
-                    if($_['domain_settings'] === "default")
-                        echo 'checked="checked"';
-                    ?>><?php echo $l->t('Append Default') ?></td><td><input type="text" id="default_domain" name="default_domain" value="<?php echo $_['default_domain']; ?>" /></td></tr>
-        			<tr><td><input type="radio" name="domain_settings" id="domain_mapping" value="mapping" <?php
-                    if($_['domain_settings'] === "mapping")
-                        echo 'checked="checked"';
-                    ?>><?php echo $l->t('Map Domains') ?></td><td>
-        					<table id="domain_map_entries" cellspacing="2" cellpadding="2">
-    							<tbody>
-    								<tr><th><input type="text" placeholder="Server Domain" id="inputServerDomain"></th><th><input type="text" placeholder="Map to Domain" id="inputMapDomain"></th><th><input id="domainAddMap" type="submit" value="<?php echo $l -> t('Add Entry'); ?>" /></th></tr>
-    								<?php $domains = explode(",", $_['domain_array']);
-                                        $maps = explode(",", $_['map_array']);
-                                        for($i = 0; $i < count($domains); $i++)
-                                        {
-                                            if(trim($domains[$i]) !== "" && trim($domains[$i]) !== "")
-                                                echo "<tr><td>" . htmlspecialchars($domains[$i]) . "</td><td>" . htmlspecialchars($maps[$i]) . "</td><td><a class=\"deleteLink\" href=\"#\" >delete</a></td></tr>";
-                                        }
-									?>
-    							</tbody>
-        					</table></td></tr>
-        		</table></td></tr>
-            <tr><td><label for="strip_domain"><?php echo $l -> t('Strip Domain Part from Username'); ?></label></td><td><input type="checkbox" id="strip_domain" name="strip_domain" value="1"<?php
-            if($_['strip_domain'])
-                echo ' checked';
-            ?> title="Strip Domain Part from Username when logging in and retrieving username lists"></td></tr>
-	
-        	</table>
-        </fieldset>
-        <input type="hidden" name="requesttoken" value="<?php echo $_['requesttoken'] ?>" id="requesttoken" />
-	<input type="hidden" name="appname" value="user_sql" />
-        <input id="sqlSubmit" type="submit" value="<?php echo $l -> t('Save'); ?>" />
-        <div id="sql_update_message" class="statusmessage"><?php echo $l -> t('Saving...'); ?></div>
+        <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>" id="requesttoken" />
+    <input type="hidden" name="appname" value="user_sql" />
+        <input id="sqlSubmit" type="submit" value="<?php p($l -> t('Save')); ?>" />
+        <div id="sql_update_message" class="statusmessage"><?php p($l -> t('Saving...')); ?></div>
+        <div id="sql_loading_message" class="statusmessage"><?php p($l -> t('Loading...')); ?></div>
         <div id="sql_error_message" class="errormessage"></div>
         <div id="sql_success_message" class="successmessage"></div>
     </div>
 </form>
+</div>

@@ -1,66 +1,83 @@
 <?php
 
+namespace OCA\user_sql;
+
 // Init owncloud
 
 // Check if we are a user
-OCP\User::checkAdminUser();
-OCP\JSON::checkAppEnabled('user_sql');
+\OCP\User::checkAdminUser();
+\OCP\JSON::checkAppEnabled('user_sql');
 
 // CSRF checks
-OCP\JSON::callCheck();
+\OCP\JSON::callCheck();
+
+
+$helper = new \OCA\user_sql\lib\Helper;
 
 $l = \OC::$server->getL10N('user_sql');
 
-$params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 
-        'sql_table', 'sql_column_username', 'sql_column_password', 'sql_type', 
-        'sql_column_active', 'strip_domain', 'default_domain', 'crypt_type', 
-        'sql_column_displayname', 'domain_settings', 'map_array', 'domain_array', 
-        'allow_password_change', 'sql_column_active_invert', 'sql_column_email',
-        'mail_sync_mode');
+$params = $helper -> getParameterArray();
 
-if(isset($_POST['appname']) && $_POST['appname'] === "user_sql")
+if(isset($_POST['appname']) && ($_POST['appname'] === 'user_sql') && isset($_POST['function']) && isset($_POST['domain']))
 {
-    foreach($params as $param)
+    $domain = $_POST['domain'];
+    switch($_POST['function'])
     {
-        if(isset($_POST[$param]))
-        {
-            if($param === 'strip_domain')
+        case 'saveSettings':
+                foreach($params as $param)
+                {
+                    if(isset($_POST[$param]))
+                    {
+                        if($param === 'set_strip_domain')
+                        {
+                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_strip_domain_'.$domain, 'true');
+                        } 
+                        elseif($param === 'set_allow_pwchange')
+                        {
+                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_allow_pwchange_'.$domain, 'true');
+                        }
+                        elseif($param === 'set_active_invert')
+                        {
+                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_active_invert_'.$domain, 'true');
+                        }
+                        else
+                        {
+                            \OC::$server->getConfig()->setAppValue('user_sql', $param.'_'.$domain, $_POST[$param]);
+                        }
+                    } else
+                    {
+                        if($param === 'set_strip_domain')
+                        {
+                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_strip_domain_'.$domain, 'false');
+                        }
+                        elseif($param === 'set_allow_pwchange')
+                        {
+                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_allow_pwchange_'.$domain, 'false');
+                        }
+                        elseif($param === 'set_active_invert')
+                        {
+                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_active_invert_'.$domain, 'false');
+                        }
+                    }
+                }
+        break;
+
+        case 'loadSettingsForDomain':
+            $retArr = array();
+            foreach($params as $param)
             {
-                OCP\Config::setAppValue('user_sql', 'strip_domain', true);
-            } 
-            elseif($param === 'allow_password_change')
-            {
-                OCP\Config::setAppValue('user_sql', 'allow_password_change', true);
+                $retArr[$param] = \OC::$server->getConfig()->getAppValue('user_sql', $param.'_'.$domain, '');     
             }
-            elseif($param === 'sql_column_active_invert')
-            {
-                OCP\Config::setAppValue('user_sql', 'sql_column_active_invert', true);
-            }
-            else
-            {
-                OCP\Config::setAppValue('user_sql', $param, $_POST[$param]);
-            }
-        } else
-        {
-            if($param === 'strip_domain')
-            {
-                OCP\Config::setAppValue('user_sql', 'strip_domain', false);
-            }
-            elseif($param === 'allow_password_change')
-            {
-                OCP\Config::setAppValue('user_sql', 'allow_password_change', false);
-            }
-            elseif($param === 'sql_column_active_invert')
-            {
-                OCP\Config::setAppValue('user_sql', 'sql_column_active_invert', false);
-            }
-        }
+            \OCP\JSON::success(array('settings' => $retArr));
+            return true;
+        break;
     }
+
 } else
 {
-    \OCP\JSON::error(array("data" => array("message" => $l -> t("Not submitted for us."))));
+    \OCP\JSON::error(array('data' => array('message' => $l -> t('Not submitted for us.'))));
     return false;
 }
 
-OCP\JSON::success(array('data' => array('message' => $l -> t('Application settings successfully stored.'))));
+\OCP\JSON::success(array('data' => array('message' => $l -> t('Application settings successfully stored.'))));
 return true;

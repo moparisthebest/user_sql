@@ -4,7 +4,7 @@
 * ownCloud - user_sql
 *
 * @author Andreas Böhler
-* @copyright 2012 Andreas Böhler <andreas (at) aboehler (dot) at>
+* @copyright 2012-2015 Andreas Böhler <dev (at) aboehler (dot) at>
 *
 * This library is free software; you can redistribute it and/or
 * modify it under the terms of the GNU AFFERO GENERAL PUBLIC LICENSE
@@ -22,22 +22,14 @@
 */
 
 require_once('apps/user_sql/user_sql.php');
-
 \OCP\App::registerAdmin('user_sql','settings');
 
-// define IMAP_DEFAULTs
-define('OC_USER_BACKEND_SQL_DEFAULT_HOST', 'localhost');
-define('OC_USER_BACKEND_SQL_DEFAULT_USER', 'mail_admin');
-define('OC_USER_BACKEND_SQL_DEFAULT_DB', 'postfixadmin');
-define('OC_USER_BACKEND_SQL_DEFAULT_PASSWORD', 'password');
-define('OC_USER_BACKEND_SQL_DEFAULT_TABLE', 'users');
-define('OC_USER_BACKEND_SQL_DEFAULT_PW_COLUMN', 'password');
-define('OC_USER_BACKEND_SQL_DEFAULT_USER_COLUMN', 'username');
-define('OC_USER_BACKEND_SQL_DEFAULT_DRIVER', 'mysql');
+$backend = new \OCA\user_sql\OC_USER_SQL;
+
 
 // register user backend
-OC_User::registerBackend('SQL');
-OC_User::useBackend('SQL');
+OC_User::registerBackend($backend);
+OC_User::useBackend($backend);
 
 // add settings page to navigation
 $entry = array(

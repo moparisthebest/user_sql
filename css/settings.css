@@ -9,6 +9,6 @@
 }
 .statusmessage,.errormessage,.successmessage{
         display:none;
-        padding: 1;
+        padding: 1px;
 }
 

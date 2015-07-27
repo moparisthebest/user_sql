@@ -3,34 +3,6 @@ var user_sql = user_sql ||
 {
 };
 
-user_sql.adminSettingsCheckRadio = function()
-{
-    if($('#domain_none').attr("checked") == "checked")
-    {
-        $('#default_domain').attr("disabled", true);
-        $('#inputServerDomain').attr("disabled", true);
-        $('#inputMapDomain').attr("disabled", true);
-        $('#domainAddMap').attr("disabled", true);
-    } else if($('#domain_server').attr("checked") == "checked")
-    {
-        $('#default_domain').attr("disabled", true);
-        $('#inputServerDomain').attr("disabled", true);
-        $('#inputMapDomain').attr("disabled", true);
-        $('#domainAddMap').attr("disabled", true);
-    } else if($('#domain_mapping').attr("checked") == "checked")
-    {
-        $('#default_domain').attr("disabled", true);
-        $('#inputServerDomain').removeAttr("disabled");
-        $('#inputMapDomain').removeAttr("disabled");
-        $('#domainAddMap').removeAttr("disabled");
-    } else if($('#domain_default').attr("checked") == "checked")
-    {
-        $('#default_domain').removeAttr("disabled");
-        $('#inputServerDomain').attr("disabled", true);
-        $('#inputMapDomain').attr("disabled", true);
-        $('#domainAddMap').attr("disabled", true);
-    }
-};
 /**
  * init admin settings view
  */
@@ -48,28 +20,18 @@ user_sql.adminSettingsUI = function()
 
             var self = $(this);
             var post = $('#sqlForm').serializeArray();
-            var domainArr = new Array();
-            var mapArr = new Array();
-            $('#domain_map_entries tr').each(function()
-            {
-                var d = $(this).find("td:first").html();
-                var m = $(this).find("td").eq(1).html();
-                if(d != undefined && m != undefined)
-                {
-                    mapArr.push(m);
-                    domainArr.push(d);
-                }
+            var domain = $('#sql_domain_chooser option:selected').val();
+            
+            post.push({
+                name: 'function',
+                value: 'saveSettings'
             });
-            post.push(
-            {
-                name : 'map_array',
-                value : mapArr
+            
+            post.push({
+                name: 'domain',
+                value: domain
             });
-            post.push(
-            {
-                name : 'domain_array',
-                value : domainArr
-            });
+
             $('#sql_update_message').show();
             $('#sql_success_message').hide();
             $('#sql_error_message').hide();
@@ -93,47 +55,73 @@ user_sql.adminSettingsUI = function()
             }, 'json');
             return false;
         });
-
-        $('#domain_none').click(function(event)
-        {
-            user_sql.adminSettingsCheckRadio();
+        
+        $('#sql_domain_chooser').change(function() {
+           user_sql.loadDomainSettings($('#sql_domain_chooser option:selected').val());
         });
 
-        $('#domain_server').click(function(event)
-        {
-            user_sql.adminSettingsCheckRadio();
-        });
-
-        $('#domain_mapping').click(function(event)
-        {
-            user_sql.adminSettingsCheckRadio();
-        });
-
-        $('#domain_default').click(function(event)
-        {
-            user_sql.adminSettingsCheckRadio();
-        });
-
-        $('#domainAddMap').click(function(event)
-        {
-            event.preventDefault();
-            var newDomain = $('#inputServerDomain').val();
-            var newMap = $('#inputMapDomain').val();
-            $('#domain_map_entries > tbody:last').append('<tr><td>' + newDomain + '</td><td>' + newMap + '</td><td><a class="deleteLink" href="#" >delete</a></td></tr>');
-            $('#inputServerDomain').val("");
-            $('#inputMapDomain').val("");
-            $("#domain_map_entries .deleteLink").on("click", function()
-            {
-                var tr = $(this).closest('tr');
-                tr.css("background-color", "#FF3700");
-                tr.fadeOut(400, function()
-                {
-                    tr.remove();
-                });
-                return false;
-            });
-        });
+        
     }
+};
+
+user_sql.loadDomainSettings = function(domain)
+{
+    $('#sql_loading_message').show();
+    var post = [
+        {
+            name: 'appname',
+            value: 'user_sql'
+        },
+        {
+            name: 'function',
+            value: 'loadSettingsForDomain'
+        },
+        {
+            name: 'domain',
+            value: domain
+        }
+    ];
+    $.post(OC.filePath('user_sql', 'ajax', 'settings.php'), post, function(data)
+        {
+            $('#sql_loading_message').hide();
+            if(data.status == 'success')
+            {
+                for(key in data.settings)
+                {
+                    if(key == 'set_strip_domain')
+                    {
+                        if(data.settings[key] == 'true')
+                            $('#' + key).prop('checked', true);
+                        else
+                            $('#' + key).prop('checked', false);
+                    }
+                    else if(key == 'set_allow_pwchange')
+                    {
+                        if(data.settings[key] == 'true')
+                            $('#' + key).prop('checked', true);
+                        else
+                            $('#' + key).prop('checked', false);
+                    }
+                    else if(key == 'set_active_invert')
+                    {
+                        if(data.settings[key] == 'true')
+                            $('#' + key).prop('checked', true);
+                        else
+                            $('#' + key).prop('checked', false);
+                    }
+                    else
+                    {
+                        $('#' + key).val(data.settings[key]);
+                    }
+                }
+            }
+            else
+            {
+                $('#sql_error_message').html(data.data.message);
+                $('#sql_error_message').show();
+            }
+        }
+    );
 };
 
 $(document).ready(function()
@@ -141,18 +129,7 @@ $(document).ready(function()
     if($('#sql'))
     {
         user_sql.adminSettingsUI();
-        user_sql.adminSettingsCheckRadio();
-
-        $("#domain_map_entries .deleteLink").on("click", function()
-        {
-            var tr = $(this).closest('tr');
-            tr.css("background-color", "#FF3700");
-            tr.fadeOut(400, function()
-            {
-                tr.remove();
-            });
-            return false;
-        });
+        user_sql.loadDomainSettings($('#sql_domain_chooser option:selected').val());
     }
 });
 
