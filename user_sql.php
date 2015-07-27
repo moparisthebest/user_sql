@@ -26,7 +26,7 @@
  *
  */
 
-class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
+class OC_USER_SQL extends OC_User_Backend implements \OCP\IUserBackend, \OCP\UserInterface
 {
     protected $cache;
     // cached settings
@@ -91,14 +91,14 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             $this -> db_conn = true;
         } catch (PDOException $e)
         {
-            OC_Log::write('OC_USER_SQL', 'Failed to connect to the database: ' . $e -> getMessage(), OC_Log::ERROR);
+            \OCP\Util::writeLog('OC_USER_SQL', 'Failed to connect to the database: ' . $e -> getMessage(), \OCP\Util::ERROR);
         }
         return false;
     }
 
     private function doEmailSync($uid)
     {
-        OC_Log::write('OC_USER_SQL', "Entering doEmailSync for UID: $uid", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Entering doEmailSync for UID: $uid", \OCP\Util::DEBUG);
         if($this -> sql_column_email === '')
             return false;
         
@@ -109,15 +109,15 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $uid = $this -> doUserDomainMapping($uid);
 
         $query = "SELECT $this->sql_column_email FROM $this->sql_table WHERE $this->sql_column_username = :uid";
-        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Preparing query: $query", \OCP\Util::DEBUG);
         $result = $this -> db -> prepare($query);
         $result -> bindParam(":uid", $uid);
-        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Executing query...", \OCP\Util::DEBUG);
         if(!$result -> execute())
         {
             return false;
         }
-        OC_Log::write('OC_USER_SQL', "Fetching result...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Fetching result...", \OCP\Util::DEBUG);
         $row = $result -> fetch();
         if(!$row)
         {
@@ -140,16 +140,16 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
                 if(($currMail !== '') && ($currMail !== $newMail))
                 {
                     $query = "UPDATE $this->sql_table SET $this->sql_column_email = :currMail WHERE $this->sql_column_username = :uid";
-                    OC_Log::write('OC_USER_SQL', "Preapring query: $query", OC_Log::DEBUG);
+                    \OCP\Util::writeLog('OC_USER_SQL', "Preapring query: $query", \OCP\Util::DEBUG);
                     $result = $this -> db -> prepare($query);
                     $result -> bindParam(":currMail", $currMail);
                     $result -> bindParam(":uid", $uid);
-                    OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+                    \OCP\Util::writeLog('OC_USER_SQL', "Executing query...", \OCP\Util::DEBUG);
                     if(!$result -> execute())
                     {
                         $err = $result -> errorInfo();
-                        OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
-                        OC_Log::write('OC_USER_SQL', "Could not update E-Mail address in SQL database!", OC_Log::ERROR);
+                        \OCP\Util::writeLog('OC_USER_SQL', "Query failed: " . $err[2], \OCP\Util::DEBUG);
+                        \OCP\Util::writeLog('OC_USER_SQL', "Could not update E-Mail address in SQL database!", \OCP\Util::ERROR);
                     }
                 }
                 break;
@@ -165,25 +165,25 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         switch($this->domain_settings)
         {
             case "default" :
-                OC_Log::write('OC_USER_SQL', "Default mapping", OC_Log::DEBUG);
+                \OCP\Util::writeLog('OC_USER_SQL', "Default mapping", \OCP\Util::DEBUG);
                 if($this -> default_domain && (strpos($uid, '@') === false))
                     $uid .= "@" . $this -> default_domain;
                 break;
             case "server" :
-                OC_Log::write('OC_USER_SQL', "Server based mapping", OC_Log::DEBUG);
+                \OCP\Util::writeLog('OC_USER_SQL', "Server based mapping", \OCP\Util::DEBUG);
                 if(strpos($uid, '@') === false)
                     $uid .= "@" . $_SERVER['SERVER_NAME'];
                 break;
             case "mapping" :
-                OC_Log::write('OC_USER_SQL', 'Domain mapping selected', OC_Log::DEBUG);
+                \OCP\Util::writeLog('OC_USER_SQL', 'Domain mapping selected', \OCP\Util::DEBUG);
                 if(strpos($uid, '@') === false)
                 {
                     for($i = 0; $i < count($this -> domain_array); $i++)
                     {
-                        OC_Log::write('OC_USER_SQL', 'Checking domain in mapping: ' . $this -> domain_array[$i], OC_Log::DEBUG);
+                        \OCP\Util::writeLog('OC_USER_SQL', 'Checking domain in mapping: ' . $this -> domain_array[$i], \OCP\Util::DEBUG);
                         if($_SERVER['SERVER_NAME'] === trim($this -> domain_array[$i]))
                         {
-                            OC_Log::write('OC_USER_SQL', 'Found domain in mapping: ' . $this -> domain_array[$i], OC_Log::DEBUG);
+                            \OCP\Util::writeLog('OC_USER_SQL', 'Found domain in mapping: ' . $this -> domain_array[$i], \OCP\Util::DEBUG);
                             $uid .= "@" . trim($this -> map_array[$i]);
                             break;
                         }
@@ -192,12 +192,12 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
                 break;
             case "none" :
             default :
-                OC_Log::write('OC_USER_SQL', "No mapping", OC_Log::DEBUG);
+                \OCP\Util::writeLog('OC_USER_SQL', "No mapping", \OCP\Util::DEBUG);
                 break;
         }
 
         $uid = strtolower($uid);
-        OC_Log::write('OC_USER_SQL', 'Returning mapped UID: ' . $uid, OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', 'Returning mapped UID: ' . $uid, \OCP\Util::DEBUG);
         return $uid;
     }
 
@@ -214,14 +214,14 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
     public function createUser()
     {
         // Can't create user
-        OC_Log::write('OC_USER_SQL', 'Not possible to create local users from web frontend using SQL user backend', OC_Log::ERROR);
+        \OCP\Util::writeLog('OC_USER_SQL', 'Not possible to create local users from web frontend using SQL user backend', \OCP\Util::ERROR);
         return false;
     }
 
     public function deleteUser($uid)
     {
         // Can't delete user
-        OC_Log::write('OC_USER_SQL', 'Not possible to delete local users from web frontend using SQL user backend', OC_Log::ERROR);
+        \OCP\Util::writeLog('OC_USER_SQL', 'Not possible to delete local users from web frontend using SQL user backend', \OCP\Util::ERROR);
         return false;
     }
 
@@ -229,7 +229,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
     {
         // Update the user's password - this might affect other services, that
         // use the same database, as well
-        OC_Log::write('OC_USER_SQL', "Entering setPassword for UID: $uid", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Entering setPassword for UID: $uid", \OCP\Util::DEBUG);
         if(!$this -> db_conn || !$this->allow_password_change)
         {
             return false;
@@ -237,15 +237,15 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $uid = $this -> doUserDomainMapping($uid);
 
         $query = "SELECT $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
-        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Preparing query: $query", \OCP\Util::DEBUG);
         $result = $this -> db -> prepare($query);
         $result -> bindParam(":uid", $uid);
-        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Executing query...", \OCP\Util::DEBUG);
         if(!$result -> execute())
         {
             return false;
         }
-        OC_Log::write('OC_USER_SQL', "Fetching result...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Fetching result...", \OCP\Util::DEBUG);
         $row = $result -> fetch();
         if(!$row)
         {
@@ -277,19 +277,19 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             $enc_password = $this -> pacrypt($password, $old_password);
         }
         $query = "UPDATE $this->sql_table SET $this->sql_column_password = :enc_password WHERE $this->sql_column_username = :uid";
-        OC_Log::write('OC_USER_SQL', "Preapring query: $query", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Preapring query: $query", \OCP\Util::DEBUG);
         $result = $this -> db -> prepare($query);
         $result -> bindParam(":enc_password", $enc_password);
         $result -> bindParam(":uid", $uid);
-        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Executing query...", \OCP\Util::DEBUG);
         if(!$result -> execute())
         {
             $err = $result -> errorInfo();
-            OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
-            OC_Log::write('OC_USER_SQL', "Could not update password!", OC_Log::ERROR);
+            \OCP\Util::writeLog('OC_USER_SQL', "Query failed: " . $err[2], \OCP\Util::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "Could not update password!", \OCP\Util::ERROR);
             return false;
         }
-        OC_Log::write('OC_USER_SQL', "Updated password successfully, return true", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Updated password successfully, return true", \OCP\Util::DEBUG);
         return true;
     }
 
@@ -303,7 +303,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
      */
     public function checkPassword($uid, $password)
     {
-        OC_Log::write('OC_USER_SQL', "Entering checkPassword() for UID: $uid", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Entering checkPassword() for UID: $uid", \OCP\Util::DEBUG);
         if(!$this -> db_conn)
         {
             return false;
@@ -313,24 +313,24 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $query = "SELECT $this->sql_column_username, $this->sql_column_password FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this -> sql_column_active !== '')
             $query .= " AND " .($this->sql_column_active_invert ? "NOT " : "" ).$this->sql_column_active;
-        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Preparing query: $query", \OCP\Util::DEBUG);
         $result = $this -> db -> prepare($query);
         $result -> bindParam(":uid", $uid);
-        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Executing query...", \OCP\Util::DEBUG);
         if(!$result -> execute())
         {
             $err = $result -> errorInfo();
-            OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "Query failed: " . $err[2], \OCP\Util::DEBUG);
             return false;
         }
-        OC_Log::write('OC_USER_SQL', "Fetching row...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Fetching row...", \OCP\Util::DEBUG);
         $row = $result -> fetch();
         if(!$row)
         {
-            OC_Log::write('OC_USER_SQL', "Got no row, return false", OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "Got no row, return false", \OCP\Util::DEBUG);
             return false;
         }
-        OC_Log::write('OC_USER_SQL', "Encrypting and checking password", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Encrypting and checking password", \OCP\Util::DEBUG);
         // Joomla 2.5.18 switched to phPass, which doesn't play nice with the way
         // we check passwords
         if($this -> crypt_type === 'joomla2')
@@ -359,7 +359,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         }
         if($ret)
         {
-            OC_Log::write('OC_USER_SQL', "Passwords matching, return true", OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "Passwords matching, return true", \OCP\Util::DEBUG);
             if($this -> strip_domain)
             {
                 $uid = explode("@", $uid);
@@ -368,7 +368,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             return $uid;
         } else
         {
-            OC_Log::write('OC_USER_SQL', "Passwords do not match, return false", OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "Passwords do not match, return false", \OCP\Util::DEBUG);
             return false;
         }
     }
@@ -382,7 +382,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
 
     public function getUsers($search = '', $limit = null, $offset = null)
     {
-        OC_Log::write('OC_USER_SQL', "Entering getUsers() with Search: $search, Limit: $limit, Offset: $offset", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Entering getUsers() with Search: $search, Limit: $limit, Offset: $offset", \OCP\Util::DEBUG);
         $users = array();
         if(!$this -> db_conn)
         {
@@ -403,7 +403,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             $offset = intval($offset);
             $query .= " OFFSET $offset";
         }
-        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Preparing query: $query", \OCP\Util::DEBUG);
         $result = $this -> db -> prepare($query);
         if($search !== '')
         {
@@ -415,14 +415,14 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         }
         $result -> bindParam(":search", $search);
         
-        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Executing query...", \OCP\Util::DEBUG);
         if(!$result -> execute())
         {
             $err = $result -> errorInfo();
-            OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "Query failed: " . $err[2], \OCP\Util::DEBUG);
             return array();
         }
-        OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Fetching results...", \OCP\Util::DEBUG);
         while($row = $result -> fetch())
         {
             $uid = $row[$this -> sql_column_username];
@@ -433,7 +433,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
             }
             $users[] = strtolower($uid);
         }
-        OC_Log::write('OC_USER_SQL', "Return list of results", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Return list of results", \OCP\Util::DEBUG);
         return $users;
     }
 
@@ -448,10 +448,11 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
 
         $cacheKey = 'sql_user_exists_' . $uid;
         $cacheVal = $this -> getCache ($cacheKey);
+        \OCP\Util::writeLog('OC_USER_SQL', "userExists() for UID: $uid cacheVal: $cacheVal", \OCP\Util::DEBUG);
         if(!is_null($cacheVal))
             return (bool)$cacheVal;
 
-        OC_Log::write('OC_USER_SQL', "Entering userExists() for UID: $uid", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Entering userExists() for UID: $uid", \OCP\Util::DEBUG);
         if(!$this -> db_conn)
         {
             return false;
@@ -460,28 +461,28 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $query = "SELECT $this->sql_column_username FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this -> sql_column_active !== '')
             $query .= " AND " .($this->sql_column_active_invert ? "NOT " : "" ).$this->sql_column_active;
-        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Preparing query: $query", \OCP\Util::DEBUG);
         $result = $this -> db -> prepare($query);
         $result -> bindParam(":uid", $uid);
-        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Executing query...", \OCP\Util::DEBUG);
         if(!$result -> execute())
         {
             $err = $result -> errorInfo();
-            OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "Query failed: " . $err[2], \OCP\Util::DEBUG);
             return false;
         }
-        OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Fetching results...", \OCP\Util::DEBUG);
 
         $exists = (bool)$result -> fetch();
         $this -> setCache ($cacheKey, $exists, 60);
 
         if(!$exists)
         {
-            OC_Log::write('OC_USER_SQL', "Empty row, user does not exists, return false", OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "Empty row, user does not exists, return false", \OCP\Util::DEBUG);
             return false;
         } else
         {
-            OC_Log::write('OC_USER_SQL', "User exists, return true", OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "User exists, return true", \OCP\Util::DEBUG);
             return true;
         }
 
@@ -489,7 +490,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
 
     public function getDisplayName($uid)
     {
-        OC_Log::write('OC_USER_SQL', "Entering getDisplayName() for UID: $uid", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Entering getDisplayName() for UID: $uid", \OCP\Util::DEBUG);
         if(!$this -> db_conn)
         {
             return false;
@@ -505,25 +506,25 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $query = "SELECT $this->sql_column_displayname FROM $this->sql_table WHERE $this->sql_column_username = :uid";
         if($this -> sql_column_active !== '')
             $query .= " AND " .($this->sql_column_active_invert ? "NOT " : "" ).$this->sql_column_active;
-        OC_Log::write('OC_USER_SQL', "Preparing query: $query", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Preparing query: $query", \OCP\Util::DEBUG);
         $result = $this -> db -> prepare($query);
         $result -> bindParam(":uid", $uid);
-        OC_Log::write('OC_USER_SQL', "Executing query...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Executing query...", \OCP\Util::DEBUG);
         if(!$result -> execute())
         {
             $err = $result -> errorInfo();
-            OC_Log::write('OC_USER_SQL', "Query failed: " . $err[2], OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "Query failed: " . $err[2], \OCP\Util::DEBUG);
             return false;
         }
-        OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Fetching results...", \OCP\Util::DEBUG);
         $row = $result -> fetch();
         if(!$row)
         {
-            OC_Log::write('OC_USER_SQL', "Empty row, user has no display name or does not exist, return false", OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "Empty row, user has no display name or does not exist, return false", \OCP\Util::DEBUG);
             return false;
         } else
         {
-            OC_Log::write('OC_USER_SQL', "User exists, return true", OC_Log::DEBUG);
+            \OCP\Util::writeLog('OC_USER_SQL', "User exists, return true", \OCP\Util::DEBUG);
             $displayName = $row[$this -> sql_column_displayname];
             return $displayName; ;
         }
@@ -557,7 +558,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
      */
     private function pacrypt($pw, $pw_db = "")
     {
-        OC_Log::write('OC_USER_SQL', "Entering private pacrypt()", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Entering private pacrypt()", \OCP\Util::DEBUG);
         $pw = stripslashes($pw);
         $password = "";
         $salt = "";
@@ -655,10 +656,10 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
 			$password = $this->ssha256($pw,$salt);
         } else
         {
-            OC_Log::write('OC_USER_SQL', "unknown/invalid crypt_type settings: $this->crypt_type", OC_Log::ERROR);
+            \OCP\Util::writeLog('OC_USER_SQL', "unknown/invalid crypt_type settings: $this->crypt_type", \OCP\Util::ERROR);
             die('unknown/invalid Encryption type setting: ' . $this -> crypt_type);
         }
-        OC_Log::write('OC_USER_SQL', "pacrypt() done, return", OC_Log::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "pacrypt() done, return", \OCP\Util::DEBUG);
         return $password;
     }
 

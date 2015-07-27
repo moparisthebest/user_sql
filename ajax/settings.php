@@ -9,7 +9,7 @@ OCP\JSON::checkAppEnabled('user_sql');
 // CSRF checks
 OCP\JSON::callCheck();
 
-$l = new OC_L10N('user_sql');
+$l = \OC::$server->getL10N('user_sql');
 
 $params = array('sql_host', 'sql_user', 'sql_database', 'sql_password', 
         'sql_table', 'sql_column_username', 'sql_column_password', 'sql_type', 
@@ -58,7 +58,7 @@ if(isset($_POST['appname']) && $_POST['appname'] === "user_sql")
     }
 } else
 {
-    OC_JSON::error(array("data" => array("message" => $l -> t("Not submitted for us."))));
+    \OCP\JSON::error(array("data" => array("message" => $l -> t("Not submitted for us."))));
     return false;
 }
 

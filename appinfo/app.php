@@ -23,7 +23,7 @@
 
 require_once('apps/user_sql/user_sql.php');
 
-OC_App::registerAdmin('user_sql','settings');
+\OCP\App::registerAdmin('user_sql','settings');
 
 // define IMAP_DEFAULTs
 define('OC_USER_BACKEND_SQL_DEFAULT_HOST', 'localhost');
