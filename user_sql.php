@@ -203,7 +203,10 @@ class OC_USER_SQL extends OC_User_Backend implements \OCP\IUserBackend, \OCP\Use
 
     public function implementsAction($actions)
     {
-        return (bool)((OC_USER_BACKEND_CHECK_PASSWORD | OC_USER_BACKEND_GET_DISPLAYNAME) & $actions);
+        return (bool)((\OC_User_Backend::CHECK_PASSWORD
+			| \OC_User_Backend::GET_DISPLAYNAME
+			| \OC_User_Backend::COUNT_USERS
+			) & $actions);
     }
 
     public function hasUserListings()
@@ -373,6 +376,31 @@ class OC_USER_SQL extends OC_User_Backend implements \OCP\IUserBackend, \OCP\Use
         }
     }
 
+	public function countUsers()
+	{
+		\OCP\Util::writeLog('OC_USER_SQL', "Entering countUsers()",\OCP\Util::DEBUG);
+		if(!$this -> db_conn)
+		{
+			return FALSE;
+		}
+		$query = "SELECT COUNT(*) FROM $this->sql_table";
+		if($this -> sql_column_active !== '')
+			$query .= " WHERE " .($this->sql_column_active_invert ? "NOT " : "" ).$this->sql_column_active;
+		 \OCP\Util::writeLog('OC_USER_SQL', "Preparing query: $query", \OCP\Util::DEBUG);
+		$result = $this -> db -> prepare($query);
+        \OCP\Util::writeLog('OC_USER_SQL', "Executing query...", \OCP\Util::DEBUG);
+        if(!$result -> execute())
+        {
+            $err = $result -> errorInfo();
+            \OCP\Util::writeLog('OC_USER_SQL', "Query failed: " . $err[2], \OCP\Util::DEBUG);
+            return 0;
+        }
+        \OCP\Util::writeLog('OC_USER_SQL', "Fetching results...", \OCP\Util::DEBUG);
+		$userCount = reset($result -> fetch());
+		\OCP\Util::writeLog('OC_USER_SQL', "Return usercount", \OCP\Util::DEBUG);
+		return $userCount;
+	}
+
     /**
      * @brief Get a list of all users
      * @returns array with all uids
@@ -541,6 +569,15 @@ class OC_USER_SQL extends OC_User_Backend implements \OCP\IUserBackend, \OCP\Use
         }
         return $displayNames;
     }
+
+	/**
+	 * Returns the backend name
+	 * @return string
+	 */
+	public function getBackendName()
+	{
+		return 'SQL';
+	}
 
     /**
      * The following functions were directly taken from PostfixAdmin and just
