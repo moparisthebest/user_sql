@@ -52,11 +52,16 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
     protected $domain_array;
     protected $map_array;
     protected $allow_password_change;
+    protected $session_cache_name;
 
     public function __construct()
     {
         $this -> db_conn = false;
-        $this -> cache = \OC\Cache::getGlobalCache();
+		$memcache = \OC::$server->getMemCacheFactory();
+		if ( $memcache -> isAvailable())
+		{
+			$this -> cache = $memcache -> create();
+		}
         $this -> sql_host = OCP\Config::getAppValue('user_sql', 'sql_host', '');
         $this -> sql_username = OCP\Config::getAppValue('user_sql', 'sql_user', '');
         $this -> sql_database = OCP\Config::getAppValue('user_sql', 'sql_database', '');
@@ -77,6 +82,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         $this -> domain_array = explode(",", OCP\Config::getAppValue('user_sql', 'domain_array', ''));
         $this -> map_array = explode(",", OCP\Config::getAppValue('user_sql', 'map_array', ''));
         $this -> mail_sync_mode = OCP\Config::getAppValue('user_sql', 'mail_sync_mode', 'none');
+        $this -> session_cache_name = 'USER_SQL_CACHE';
         $dsn = $this -> sql_type . ":host=" . $this -> sql_host . ";dbname=" . $this -> sql_database;
         try
         {
@@ -441,7 +447,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
     {
 
         $cacheKey = 'sql_user_exists_' . $uid;
-        $cacheVal = $this -> cache -> get($cacheKey);
+        $cacheVal = $this -> getCache ($cacheKey);
         if(!is_null($cacheVal))
             return (bool)$cacheVal;
 
@@ -467,7 +473,7 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         OC_Log::write('OC_USER_SQL', "Fetching results...", OC_Log::DEBUG);
 
         $exists = (bool)$result -> fetch();
-        $this -> cache -> set($cacheKey, $exists, 60);
+        $this -> setCache ($cacheKey, $exists, 60);
 
         if(!$exists)
         {
@@ -775,6 +781,53 @@ class OC_USER_SQL extends OC_User_Backend implements OC_User_Interface
         }
         return $ret;
     }
+
+	/**
+	 * Store a value in memcache or the session, if no memcache is available
+	 * @param string $key
+	 * @param mixed $value
+	 * @param int $ttl (optional) defaults to 3600 seconds.
+	 */
+	private function setCache($key,$value,$ttl=3600)
+	{
+		if ($this -> cache === NULL)
+		{
+			$_SESSION[$this -> session_cache_name][$key] = array(
+				'value' => $value,
+				'time' => time(),
+				'ttl' => $ttl,
+			);
+		} else
+		{
+			$this -> cache -> set($key,$value,$ttl);
+		}
+	}
+
+	/**
+	 * Fetch a value from memcache or session, if memcache is not available.
+	 * Returns NULL if there's no value stored or the value expired.
+	 * @param string $key
+	 * @return mixed|NULL
+	 */
+	private function getCache($key)
+	{
+		$retVal = NULL;
+		if ($this -> cache === NULL)
+		{
+			if (isset($_SESSION[$this -> session_cache_name],$_SESSION[$this -> session_cache_name][$key]))
+			{
+				$value = $_SESSION[$this -> session_cache_name][$key];
+				if (time() < $value['time'] + $value['ttl'])
+				{
+					$retVal = $value['value'];
+				}
+			}
+		} else
+		{
+			$retVal = $this -> cache -> get ($key);
+		}
+		return $retVal;
+	}
 
 }
 ?>
