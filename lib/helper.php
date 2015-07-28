@@ -108,9 +108,9 @@ class Helper {
             break;
 
             case 'countUsers':
-                $query = "SELECT COUNT(*) FROM ".$this->settings['sql_table'];
+                $query = "SELECT COUNT(*) FROM ".$this->settings['sql_table']." WHERE ".$this->settings['col_username'] ." LIKE :search";
                 if($this -> settings['col_active'] !== '')
-                    $query .= " WHERE " .($this -> settings['set_active_invert'] === 'true' ? "NOT " : "" ) . $this -> settings['col_active'];
+                    $query .= " AND " .($this -> settings['set_active_invert'] === 'true' ? "NOT " : "" ) . $this -> settings['col_active'];
             break;
 
             case 'getUsers':

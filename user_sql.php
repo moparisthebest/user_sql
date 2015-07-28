@@ -254,7 +254,8 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
 	{
         \OCP\Util::writeLog('OC_USER_SQL', "Entering countUsers()", \OCP\Util::DEBUG);
 
-        $userCount = $this -> helper -> runQuery('countUsers', array());
+        $search = "%".$this -> doUserDomainMapping("");
+        $userCount = $this -> helper -> runQuery('countUsers', array('search' => $search));
         if($userCount === false)
         {
             $userCount = 0;
@@ -263,7 +264,7 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
             $userCount = reset($userCount);
         }
 
-        \OCP\Util::writeLog('OC_USER_SQL', "Return usercount", \OCP\Util::DEBUG);
+        \OCP\Util::writeLog('OC_USER_SQL', "Return usercount: ".$userCount, \OCP\Util::DEBUG);
         return $userCount;
 	}
 
