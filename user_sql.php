@@ -164,9 +164,9 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         $old_password = $row[$this -> settings['col_password']];
         if($this -> settings['set_crypt_type'] === 'joomla2')
         {
-            if(!class_exists('PasswordHash'))
+            if(!class_exists('\PasswordHash'))
                 require_once('PasswordHash.php');
-            $hasher = new PasswordHash(10, true);
+            $hasher = new \PasswordHash(10, true);
             $enc_password = $hasher -> HashPassword($password);
         }         
         // Redmine stores the salt separatedly, this doesn't play nice with the way
@@ -217,9 +217,9 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         // we check passwords
         if($this -> settings['set_crypt_type'] === 'joomla2')
         {
-            if(!class_exists('PasswordHash'))
+            if(!class_exists('\PasswordHash'))
                 require_once('PasswordHash.php');
-            $hasher = new PasswordHash(10, true);
+            $hasher = new \PasswordHash(10, true);
             $ret = $hasher -> CheckPassword($password, $db_pass);
         } 
         // Redmine stores the salt separatedly, this doesn't play nice with the way
