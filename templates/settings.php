@@ -15,7 +15,7 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
         <?php endforeach ?>
     </select>
     <ul>
-      <li><a id="sqlBasicSettings" href="#sql-1"><?php p($l -> t('Basic Settings')); ?></a></li>
+      <li><a id="sqlBasicSettings" href="#sql-1"><?php p($l -> t('Connection Settings')); ?></a></li>
       <li><a id="sqlAdvSettings" href="#sql-2"><?php p($l -> t('Advanced Settings')); ?></a></li>
     </ul>
 
@@ -41,11 +41,12 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
             <tr><td><label for="sql_username"><?php p($l -> t('Username')); ?></label></td><td><input type="text" id="sql_username" name="sql_username" value="<?php p($_['sql_username']); ?>" /></td></tr>
             <tr><td><label for="sql_database"><?php p($l -> t('Database')); ?></label></td><td><input type="text" id="sql_database" name="sql_database" value="<?php p($_['sql_database']); ?>" /></td></tr>
             <tr><td><label for="sql_password"><?php p($l -> t('Password')); ?></label></td><td><input type="password" id="sql_password" name="sql_password" value="<?php p($_['sql_password']); ?>" /></td></tr>
-            <tr><td><label for="sql_table"><?php p($l -> t('Table')); ?></label></td><td><input type="text" id="sql_table" name="sql_table" value="<?php p($_['sql_table']); ?>" /></td></tr>
+            <tr><td></td><td><input type="submit" id="sqlVerify" value="<?php p($l -> t('Verify Settings')); ?>"></td></tr>
         </table>
         </fieldset>
         <fieldset id="sql-2">
         <table>
+            <tr><td><label for="sql_table"><?php p($l -> t('Table')); ?></label></td><td><input type="text" id="sql_table" name="sql_table" value="<?php p($_['sql_table']); ?>" /></td></tr>            
             <tr><td><label for="col_username"><?php p($l -> t('Username Column')); ?></label></td><td><input type="text" id="col_username" name="col_username" value="<?php p($_['col_username']); ?>" /></td></tr>
             <tr><td><label for="col_password"><?php p($l -> t('Password Column')); ?></label></td><td><input type="text" id="col_password" name="col_password" value="<?php p($_['col_password']); ?>" /></td></tr>
             <tr><td><label for="set_allow_pwchange"><?php p($l -> t('Allow password changing (read README!)')); ?></label></td><td><input type="checkbox" id="set_allow_pwchange" name="set_allow_pwchange" value="1"<?php
@@ -97,10 +98,11 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
         </table>
         </fieldset>
         <input type="hidden" name="requesttoken" value="<?php p($_['requesttoken']); ?>" id="requesttoken" />
-    <input type="hidden" name="appname" value="user_sql" />
+        <input type="hidden" name="appname" value="user_sql" />
         <input id="sqlSubmit" type="submit" value="<?php p($l -> t('Save')); ?>" />
         <div id="sql_update_message" class="statusmessage"><?php p($l -> t('Saving...')); ?></div>
         <div id="sql_loading_message" class="statusmessage"><?php p($l -> t('Loading...')); ?></div>
+        <div id="sql_verify_message" class="statusmessage"><?php p($l -> t('Verifying...')); ?></div>
         <div id="sql_error_message" class="errormessage"></div>
         <div id="sql_success_message" class="successmessage"></div>
     </div>

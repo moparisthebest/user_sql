@@ -34,11 +34,14 @@ use \OCA\user_sql\lib\Helper;
 class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\UserInterface
 {
     protected $cache;
-    // cached settings
     protected $settings;
     protected $helper;
     protected $session_cache_name;
 
+    /**
+     * The default constructor. It loads the settings for the given domain
+     * and tries to connect to the database.
+     */
     public function __construct()
     {
 		$memcache = \OC::$server->getMemCacheFactory();
@@ -54,6 +57,17 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         return false;
     }
 
+    /**
+     * Sync the user's E-Mail address with the address stored by ownCloud.
+     * We have three (four) sync modes:
+     *   - none:     Does nothing
+     *   - initial:  Do the sync only once from SQL -> ownCloud
+     *   - forcesql: The SQL database always wins and sync to ownCloud
+     *   - forceoc:  ownCloud always wins and syncs to SQL
+     * 
+     * @param string $uid The user's ID to sync
+     * @return bool Success or Fail
+     */
     private function doEmailSync($uid)
     {
         \OCP\Util::writeLog('OC_USER_SQL', "Entering doEmailSync for UID: $uid", \OCP\Util::DEBUG);
@@ -100,6 +114,13 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         return true;
     }
 
+    /**
+     * This maps the username to the specified domain name.
+     * It can only append a default domain name.
+     * 
+     * @param string $uid The UID to work with
+     * @return string The mapped UID
+     */
     private function doUserDomainMapping($uid)
     {
         $uid = trim($uid);
@@ -118,6 +139,11 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         return $uid;
     }
 
+    /**
+     * Return the actions implemented by this backend
+     * @param $actions
+     * @return bool
+     */
     public function implementsAction($actions)
     {
         return (bool)((\OC_User_Backend::CHECK_PASSWORD
@@ -126,11 +152,19 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
 			) & $actions);
     }
 
+    /**
+     * Checks if this backend has user listing support
+     * @return bool
+     */
     public function hasUserListings()
     {
         return true;
     }
 
+    /**
+     * Create a new user account using this backend
+     * @return bool always false, as we can't create users
+     */
     public function createUser()
     {
         // Can't create user
@@ -138,6 +172,11 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         return false;
     }
 
+    /**
+     * Delete a user account using this backend
+     * @param string $uid The user's ID to delete
+     * @return bool always false, as we can't delete users
+     */
     public function deleteUser($uid)
     {
         // Can't delete user
@@ -145,6 +184,14 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         return false;
     }
 
+    /**
+     * Set (change) a user password
+     * This can be enabled/disabled in the settings (set_allow_pwchange)
+     * 
+     * @param string $uid      The user ID
+     * @param string $password The user's new password
+     * @return bool The return status
+     */
     public function setPassword($uid, $password)
     {
         // Update the user's password - this might affect other services, that
@@ -192,10 +239,10 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
     }
 
     /**
-     * @brief Check if the password is correct
-     * @param $uid The username
-     * @param $password The password
-     * @returns true/false
+     * Check if the password is correct
+     * @param string $uid      The username
+     * @param string $password The password
+     * @return bool true/false
      *
      * Check if the password is correct without logging in the user
      */
@@ -250,6 +297,10 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         }
     }
 
+    /**
+     * Count the number of users
+     * @return int The user count
+     */
 	public function countUsers()
 	{
         \OCP\Util::writeLog('OC_USER_SQL', "Entering countUsers()", \OCP\Util::DEBUG);
@@ -269,12 +320,12 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
 	}
 
     /**
-     * @brief Get a list of all users
-     * @returns array with all uids
-     *
-     * Get a list of all users.
+     * Get a list of all users
+     * @param string $search The search term (can be empty)
+     * @param int $limit     The search limit (can be null)
+     * @param int $offset    The search offset (can be null)
+     * @return array with all uids
      */
-
     public function getUsers($search = '', $limit = null, $offset = null)
     {
         \OCP\Util::writeLog('OC_USER_SQL', "Entering getUsers() with Search: $search, Limit: $limit, Offset: $offset", \OCP\Util::DEBUG);
@@ -308,11 +359,10 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
     }
 
     /**
-     * @brief check if a user exists
+     * Check if a user exists
      * @param string $uid the username
      * @return boolean
      */
-
     public function userExists($uid)
     {
 
@@ -341,6 +391,11 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
 
     }
 
+    /**
+     * Get the display name of the user
+     * @param string $uid The user ID
+     * @return mixed The user's display name or FALSE
+     */
     public function getDisplayName($uid)
     {
         \OCP\Util::writeLog('OC_USER_SQL', "Entering getDisplayName() for UID: $uid", \OCP\Util::DEBUG);
@@ -398,8 +453,8 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
      * salt used - hence
      * the second parameter ($pw_db), which is the existing hash from the DB.
      *
-     * @param string $pw
-     * @param string $encrypted password
+     * @param string $pw        cleartext password
+     * @param string $pw_db     encrypted password from database
      * @return string encrypted password.
      */
     private function pacrypt($pw, $pw_db = "")
@@ -486,11 +541,14 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         return $password;
     }
 
-    //
-    // md5crypt
-    // Action: Creates MD5 encrypted password
-    // Call: md5crypt (string cleartextpassword)
-    //
+    /**
+     * md5crypt
+     * Creates MD5 encrypted password
+     * @param string $pw    The password to encrypt
+     * @param string $salt  The salt to use
+     * @param string $magic ?
+     * @return string The encrypted password
+     */
 
     private function md5crypt($pw, $salt = "", $magic = "")
     {
@@ -563,6 +621,10 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         return "$magic$salt\$$passwd";
     }
 
+    /**
+     * Create a new salte
+     * @return string The salt
+     */
     private function create_salt()
     {
         srand((double) microtime() * 1000000);
@@ -570,11 +632,22 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         return $salt;
     }
 
+    /**
+     * Encrypt using SSHA256 algorithm
+     * @param string $pw   The password
+     * @param string $salt The salt to use
+     * @return string The hashed password, prefixed by {SSHA256}
+     */
     private function ssha256($pw, $salt)
 	{
 	    return '{SSHA256}'.base64_encode(hash('sha256',$pw.$salt,true).$salt);
 	}
 
+    /**
+     * PostfixAdmin's hex2bin function
+     * @param string $str The string to convert
+     * @return string The converted string
+     */
     private function pahex2bin($str)
     {
         if(function_exists('hex2bin'))
@@ -593,6 +666,9 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         }
     }
 
+    /**
+     * Convert to 64?
+     */
     private function to64($v, $n)
     {
         $ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -608,11 +684,11 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
 
 	/**
 	 * Store a value in memcache or the session, if no memcache is available
-	 * @param string $key
-	 * @param mixed $value
+	 * @param string $key  The key
+	 * @param mixed $value The value to store
 	 * @param int $ttl (optional) defaults to 3600 seconds.
 	 */
-	private function setCache($key,$value,$ttl=3600)
+	private function setCache($key, $value, $ttl=3600)
 	{
 		if ($this -> cache === NULL)
 		{

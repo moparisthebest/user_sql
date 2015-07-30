@@ -29,11 +29,18 @@ class Helper {
     protected $db_conn;
     protected $settings;
     
+    /**
+     * The default constructor initializes some parameters
+     */
     public function __construct()
     {
         $this->db_conn = false;
     }
 
+    /**
+     * Return an array with all supported parameters
+     * @return array Containing strings of the parameters
+     */
     public function getParameterArray()
     {
         $params = array(
@@ -59,6 +66,12 @@ class Helper {
         return $params;
     }
     
+    /**
+     * Load the settings for a given domain. If the domain is not found,
+     * the settings for 'default' are returned instead.
+     * @param string $domain The domain name
+     * @return array of settings
+     */
     public function loadSettingsForDomain($domain)
     {
         \OCP\Util::writeLog('OC_USER_SQL', "Trying to load settings for domain: " . $domain, \OCP\Util::DEBUG);
@@ -77,6 +90,15 @@ class Helper {
         return $settings;
     }    
     
+    /**
+     * Run a given query type and return the results
+     * @param string $type The type of query to run
+     * @param array $params The parameter array of the query (i.e. the values to bind as key-value pairs)
+     * @param bool $execOnly Only execute the query, but don't fetch the results (optional, default = false)
+     * @param bool $fetchArray Fetch an array instead of a single row (optional, default=false)
+     * @param array $limits use the given limits for the query (optional, default = empty)
+     * @return mixed
+     */
     public function runQuery($type, $params, $execOnly = false, $fetchArray = false, $limits = array())
     {
         \OCP\Util::writeLog('OC_USER_SQL', "Entering runQuery for type: " . $type, \OCP\Util::DEBUG);        
@@ -188,18 +210,29 @@ class Helper {
         return $row;
     }
 
+    /**
+     * Connect to the database using ownCloud's DBAL
+     * @param array $settings The settings for the connection
+     * @return bool
+     */
     public function connectToDb($settings)
     {
         $this -> settings = $settings;
-        $dsn = $this -> settings['sql_driver'] . ":host=" . $this -> settings['sql_hostname'] . ";dbname=" . $this -> settings['sql_database'];
+        $cm = new \OC\DB\ConnectionFactory();
+        $parameters = array('host' => $this -> settings['sql_hostname'],
+                'password' => $this -> settings['sql_password'],
+                'user' => $this -> settings['sql_username'],
+                'dbname' => $this -> settings['sql_database'],
+                'tablePrefix' => ''
+            );
         try
         {
-            $this -> db = new \PDO($dsn, $this -> settings['sql_username'], $this -> settings['sql_password']);
+            $this -> db = $cm -> getConnection($this -> settings['sql_driver'], $parameters);
             $this -> db -> query("SET NAMES 'UTF8'");
             $this -> db_conn = true;
             return true;
         } 
-        catch (\PDOException $e)
+        catch (\Exception $e)
         {
             \OCP\Util::writeLog('OC_USER_SQL', 'Failed to connect to the database: ' . $e -> getMessage(), \OCP\Util::ERROR);
             $this -> db_conn = false;

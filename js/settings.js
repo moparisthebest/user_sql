@@ -1,3 +1,5 @@
+// settings.js of user_sql
+
 // declare namespace
 var user_sql = user_sql ||
 {
@@ -13,12 +15,133 @@ user_sql.adminSettingsUI = function()
     {
         // enable tabs on settings page
         $('#sql').tabs();
+        
+        // Attach auto-completion to all column fields
+        $('#col_username, #col_password, #col_displayname, #col_active, #col_email').autocomplete({
+            source: function(request, response)
+            {
+                var post = $('#sqlForm').serializeArray();
+                var domain = $('#sql_domain_chooser option:selected').val();
+                
+                post.push({
+                    name: 'function',
+                    value: 'getColumnAutocomplete'
+                });
+                
+                post.push({
+                    name: 'domain',
+                    value: domain
+                });
+                
+                post.push({
+                    name: 'request',
+                    value: request.term
+                });
+    
+                // Ajax foobar
+                $.post(OC.filePath('user_sql', 'ajax', 'settings.php'), post, response, 'json');
+            },
+            minLength: 0,
+            open: function() {
+                $(this).attr('state', 'open');
+            },
+            close: function() {
+                $(this).attr('state', 'closed');
+            }
+        }).focus(function() {
+           if($(this).attr('state') != 'open')
+           {
+               $(this).autocomplete("search");
+           } 
+        });        
+        
+        // Attach auto-completion to all table fields
+        $('#sql_table').autocomplete({
+            source: function(request, response)
+            {
+                var post = $('#sqlForm').serializeArray();
+                var domain = $('#sql_domain_chooser option:selected').val();
+                
+                post.push({
+                    name: 'function',
+                    value: 'getTableAutocomplete'
+                });
+                
+                post.push({
+                    name: 'domain',
+                    value: domain
+                });
+                
+                post.push({
+                    name: 'request',
+                    value: request.term
+                });
+    
+                // Ajax foobar
+                $.post(OC.filePath('user_sql', 'ajax', 'settings.php'), post, response, 'json');
+            },
+            minLength: 0,
+            open: function() {
+                $(this).attr('state', 'open');
+            },
+            close: function() {
+                $(this).attr('state', 'closed');
+            }
+        }).focus(function() {
+           if($(this).attr('state') != 'open')
+           {
+               $(this).autocomplete("search");
+           } 
+        });
+        
+        // Verify the SQL database settings
+        $('#sqlVerify').click(function(event)
+        {
+            event.preventDefault();
 
+            var post = $('#sqlForm').serializeArray();
+            var domain = $('#sql_domain_chooser option:selected').val();
+            
+            post.push({
+                name: 'function',
+                value: 'verifySettings'
+            });
+            
+            post.push({
+                name: 'domain',
+                value: domain
+            });
+
+            $('#sql_verify_message').show();
+            $('#sql_success_message').hide();
+            $('#sql_error_message').hide();
+            $('#sql_update_message').hide();
+            // Ajax foobar
+            $.post(OC.filePath('user_sql', 'ajax', 'settings.php'), post, function(data)
+            {
+                $('#sql_verify_message').hide();
+                if(data.status == 'success')
+                {
+                    $('#sql_success_message').html(data.data.message);
+                    $('#sql_success_message').show();
+                    window.setTimeout(function()
+                    {
+                        $('#sql_success_message').hide();
+                    }, 10000);
+                } else
+                {
+                    $('#sql_error_message').html(data.data.message);
+                    $('#sql_error_message').show();
+                }
+            }, 'json');
+            return false;
+        });            
+
+        // Save the settings for a domain
         $('#sqlSubmit').click(function(event)
         {
             event.preventDefault();
 
-            var self = $(this);
             var post = $('#sqlForm').serializeArray();
             var domain = $('#sql_domain_chooser option:selected').val();
             
@@ -34,6 +157,7 @@ user_sql.adminSettingsUI = function()
 
             $('#sql_update_message').show();
             $('#sql_success_message').hide();
+            $('#sql_verify_message').hide();
             $('#sql_error_message').hide();
             // Ajax foobar
             $.post(OC.filePath('user_sql', 'ajax', 'settings.php'), post, function(data)
@@ -55,17 +179,23 @@ user_sql.adminSettingsUI = function()
             }, 'json');
             return false;
         });
-        
+
+        // Attach event handler to the domain chooser
         $('#sql_domain_chooser').change(function() {
            user_sql.loadDomainSettings($('#sql_domain_chooser option:selected').val());
         });
-
-        
     }
 };
 
+/**
+ * Load the settings for the selected domain
+ * @param string domain The domain to load
+ */
 user_sql.loadDomainSettings = function(domain)
 {
+    $('#sql_success_message').hide();
+    $('#sql_error_message').hide();
+    $('#sql_verify_message').hide();
     $('#sql_loading_message').show();
     var post = [
         {
@@ -120,10 +250,11 @@ user_sql.loadDomainSettings = function(domain)
                 $('#sql_error_message').html(data.data.message);
                 $('#sql_error_message').show();
             }
-        }
+        }, 'json'
     );
 };
 
+// Run our JS if the SQL settings are present
 $(document).ready(function()
 {
     if($('#sql'))
