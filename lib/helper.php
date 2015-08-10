@@ -184,7 +184,7 @@ class Helper {
         $result = $this -> db -> prepare($query);
         foreach($params as $param => $value)
         {
-            $result -> bindParam(":".$param, $value);
+            $result -> bindValue(":".$param, $value);
         }
         \OCP\Util::writeLog('OC_USER_SQL', "Executing query...", \OCP\Util::DEBUG);
         if(!$result -> execute())
