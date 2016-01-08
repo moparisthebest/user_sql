@@ -55,12 +55,16 @@ class Helper {
             'col_active',
             'col_displayname',
             'col_email',
+            'col_gethome',
             'set_active_invert',
             'set_allow_pwchange',
             'set_default_domain',
             'set_strip_domain',
             'set_crypt_type',
-            'set_mail_sync_mode'
+            'set_mail_sync_mode',
+            'set_enable_gethome',
+            'set_gethome_mode',
+            'set_gethome'
         );
 
         return $params;
@@ -107,6 +111,9 @@ class Helper {
         
         switch($type)
         {
+            case 'getHome':
+                $query = "SELECT ".$this->settings['col_gethome']." FROM ".$this->settings['sql_table']." WHERE ".$this->settings['col_username']." = :uid";
+            break;
             case 'getMail':
                 $query = "SELECT ".$this->settings['col_email']." FROM ".$this->settings['sql_table']." WHERE ".$this->settings['col_username']." = :uid";
             break;

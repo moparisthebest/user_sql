@@ -149,6 +149,8 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         return (bool)((\OC_User_Backend::CHECK_PASSWORD
 			| \OC_User_Backend::GET_DISPLAYNAME
 			| \OC_User_Backend::COUNT_USERS
+			| $this -> settings['set_allow_pwchange'] === 'true' ? \OC_User_Backend::SET_PASSWORD : 0
+			| $this -> settings['set_enable_gethome'] === 'true' ? \OC_User_Backend::GET_HOME : 0
 			) & $actions);
     }
 
@@ -159,6 +161,46 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
     public function hasUserListings()
     {
         return true;
+    }
+    
+    /**
+     * Return the user's home directory, if enabled
+     * @param string $uid The user's ID to retrieve
+     * @return mixed The user's home directory or false
+     */
+    public function getHome($uid)
+    {
+        \OCP\Util::writeLog('OC_USER_SQL', "Entering getHome for UID: $uid", \OCP\Util::DEBUG);
+
+        if($this -> settings['set_enable_gethome'] !== 'true')
+            return false;
+        
+        $uidMapped = $this -> doUserDomainMapping($uid);
+        $home = false;
+        
+        switch($this->settings['set_gethome_mode'])
+        {
+            case 'query':
+                \OCP\Util::writeLog('OC_USER_SQL', "getHome with Query selected, running Query...", \OCP\Util::DEBUG);
+                $row = $this -> helper -> runQuery('getHome', array('uid' => $uidMapped));
+                if($row === false)
+                {
+                    \OCP\Util::writeLog('OC_USER_SQL', "Got no row, return false", \OCP\Util::DEBUG);
+                    return false;
+                }
+                $home = $row[$this -> settings['col_gethome']];
+            break;
+                
+            case 'static':
+                \OCP\Util::writeLog('OC_USER_SQL', "getHome with static selected", \OCP\Util::DEBUG);
+                $home = $this -> settings['set_gethome'];
+                $home = str_replace('%ud', $uidMapped, $home);                
+                $home = str_replace('%u', $uid, $home);
+                $home = str_replace('%d', $this -> settings['set_default_domain'], $home);
+            break;
+        }
+        \OCP\Util::writeLog('OC_USER_SQL', "Returning getHome for UID: $uid with Home $home", \OCP\Util::DEBUG);
+        return $home;
     }
 
     /**

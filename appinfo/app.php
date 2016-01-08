@@ -30,13 +30,3 @@ $backend = new \OCA\user_sql\OC_USER_SQL;
 // register user backend
 OC_User::registerBackend($backend);
 OC_User::useBackend($backend);
-
-// add settings page to navigation
-$entry = array(
-        'id' => "user_sql_settings",
-        'order'=>1,
-        'href' => OC_Helper::linkTo( "user_sql", "settings.php" ),
-        'name' => 'SQL'
-);
-
-

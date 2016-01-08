@@ -17,7 +17,7 @@ user_sql.adminSettingsUI = function()
         $('#sql').tabs();
         
         // Attach auto-completion to all column fields
-        $('#col_username, #col_password, #col_displayname, #col_active, #col_email').autocomplete({
+        $('#col_username, #col_password, #col_displayname, #col_active, #col_email, #col_gethome').autocomplete({
             source: function(request, response)
             {
                 var post = $('#sqlForm').serializeArray();
@@ -184,6 +184,45 @@ user_sql.adminSettingsUI = function()
         $('#sql_domain_chooser').change(function() {
            user_sql.loadDomainSettings($('#sql_domain_chooser option:selected').val());
         });
+        
+        $('#set_gethome_mode').change(function() {
+           user_sql.setGethomeMode();
+        });
+        
+        $('#set_enable_gethome').change(function() {
+            user_sql.setGethomeMode();
+        });
+    }
+};
+
+user_sql.setGethomeMode = function()
+{
+    var enabled = $('#set_enable_gethome').prop('checked');
+    if(enabled)
+    {
+        $('#set_gethome_mode').prop('disabled', false);
+        var val = $('#set_gethome_mode option:selected').val();
+        if(val === 'query')
+        {
+            $('#set_gethome').prop('disabled', true);
+            $('#col_gethome').prop('disabled', false);
+        }
+        else if(val === 'static')
+        {
+            $('#set_gethome').prop('disabled', false);
+            $('#col_gethome').prop('disabled', true);
+        }
+        else
+        {
+            $('#set_gethome').prop('disabled', true);
+            $('#col_gethome').prop('disabled', true);
+        }
+    }
+    else
+    {
+        $('#set_gethome_mode').prop('disabled', true);
+        $('#set_gethome').prop('disabled', true);
+        $('#col_gethome').prop('disabled', true);
     }
 };
 
@@ -239,6 +278,13 @@ user_sql.loadDomainSettings = function(domain)
                         else
                             $('#' + key).prop('checked', false);
                     }
+                    else if(key == 'set_allow_gethome')
+                    {
+                        if(data.settings[key] == 'true')
+                            $('#' + key).prop('checked', true);
+                        else
+                            $('#' + key).prop('checked', false);
+                    }
                     else
                     {
                         $('#' + key).val(data.settings[key]);
@@ -261,6 +307,7 @@ $(document).ready(function()
     {
         user_sql.adminSettingsUI();
         user_sql.loadDomainSettings($('#sql_domain_chooser option:selected').val());
+        user_sql.setGethomeMode();
     }
 });
 
