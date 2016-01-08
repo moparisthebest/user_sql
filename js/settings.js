@@ -278,7 +278,7 @@ user_sql.loadDomainSettings = function(domain)
                         else
                             $('#' + key).prop('checked', false);
                     }
-                    else if(key == 'set_allow_gethome')
+                    else if(key == 'set_enable_gethome')
                     {
                         if(data.settings[key] == 'true')
                             $('#' + key).prop('checked', true);
