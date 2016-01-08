@@ -296,6 +296,7 @@ user_sql.loadDomainSettings = function(domain)
                 $('#sql_error_message').html(data.data.message);
                 $('#sql_error_message').show();
             }
+            user_sql.setGethomeMode();
         }, 'json'
     );
 };
