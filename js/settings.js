@@ -11,10 +11,10 @@ var user_sql = user_sql ||
 user_sql.adminSettingsUI = function()
 {
 
-    if($('#sql').length > 0)
+    if($('#sqlDiv').length > 0)
     {
         // enable tabs on settings page
-        $('#sql').tabs();
+        $('#sqlDiv').tabs();
         
         // Attach auto-completion to all column fields
         $('#col_username, #col_password, #col_displayname, #col_active, #col_email, #col_gethome').autocomplete({
@@ -304,7 +304,7 @@ user_sql.loadDomainSettings = function(domain)
 // Run our JS if the SQL settings are present
 $(document).ready(function()
 {
-    if($('#sql'))
+    if($('#sqlDiv'))
     {
         user_sql.adminSettingsUI();
         user_sql.loadDomainSettings($('#sql_domain_chooser option:selected').val());

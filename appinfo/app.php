@@ -28,5 +28,4 @@ $backend = new \OCA\user_sql\OC_USER_SQL;
 
 
 // register user backend
-OC_User::registerBackend($backend);
-OC_User::useBackend($backend);
+\OC_User::useBackend($backend);

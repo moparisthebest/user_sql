@@ -3,11 +3,11 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
 ?>
 
 <div class="<?php p($cfgClass); ?>">
-    <h2><?php p($l->t('SQL')); ?></h2>
+    <h2><?php p($l->t('SQL User Backend')); ?></h2>
 
 <form id="sqlForm" action="#" method="post" class="<?php p($cfgClass); ?>">
 
-    <div id="sql" class="<?php p($cfgClass); ?>">
+    <div id="sqlDiv" class="<?php p($cfgClass); ?>">
     <label for="sql_domain_chooser"><?php p($l -> t('Settings for Domain')) ?></label>
     <select id="sql_domain_chooser" name="sql_domain_chooser">
         <?php foreach ($_['allowed_domains'] as $domain): ?>
