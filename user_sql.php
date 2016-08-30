@@ -548,7 +548,7 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
             $password = $row[0];
         } elseif($this -> settings['set_crypt_type'] === 'mysql_password')
         {
-            $this -> helper -> runQuery('mysqlPassword', array('pw' => $pw));
+            $row = $this -> helper -> runQuery('mysqlPassword', array('pw' => $pw));
 
             if($row === false)
             {
