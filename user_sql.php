@@ -416,7 +416,12 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
 
         \OCP\Util::writeLog('OC_USER_SQL', "Entering userExists() for UID: $uid", \OCP\Util::DEBUG);
 
-        $uid = $this -> doUserDomainMapping($uid);
+        // Only if the domain is removed for internal user handling,
+        // we should add the domain back when checking existance
+        if($this -> settings['set_strip_domain'] === 'true')
+        {
+            $uid = $this -> doUserDomainMapping($uid);
+        }
 
         $exists = (bool)$this -> helper -> runQuery('userExists', array('uid' => $uid));;
         $this -> setCache ($cacheKey, $exists, 60);
