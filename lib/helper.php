@@ -246,6 +246,103 @@ class Helper {
             return false;
         }
     }
+    
+    /**
+     * Check if all of the given columns exist
+     * @param array $parameters The connection parameters
+     * @param string $sql_driver The SQL driver to use
+     * @param string $table The table name to check
+     * @param array $cols The columns to check
+     * @param array True if found, otherwise false
+     */
+    public function verifyColumns($parameters, $sql_driver, $table, $cols)
+    {
+        $columns = $this->getColumns($parameters, $sql_driver, $table);
+        $res = true;
+        $err = '';
+        foreach($cols as $col)
+        {
+            if(!in_array($col, $columns, true))
+            {
+                $res = false;
+                $err .= $col.' ';
+            }
+        }
+        if($res)
+            return true;
+        else 
+            return $err;
+    }
+    
+    /**
+     * Check if a given table exists
+     * @param array $parameters The connection parameters
+     * @param string $sql_driver The SQL driver to use
+     * @param string $table The table name to check
+     * @param array True if found, otherwise false
+     */
+    public function verifyTable($parameters, $sql_driver, $table)
+    {
+        $tables = $this->getTables($parameters, $sql_driver);
+        return in_array($table, $tables, true);
+    }
+    
+    /**
+     * Retrieve a list of tables for the given connection parameters
+     * @param array $parameters The connection parameters
+     * @param string $sql_driver The SQL driver to use
+     * @return array The found tables, empty if an error occured
+     */
+    public function getTables($parameters, $sql_driver)
+    {
+        $cm = new \OC\DB\ConnectionFactory();
+        try {
+            $conn = $cm -> getConnection($sql_driver, $parameters);
+            $platform = $conn -> getDatabasePlatform();
+            $query = $platform -> getListTablesSQL();
+            $result = $conn -> executeQuery($query);
+            $ret = array();
+            while($row = $result -> fetch())
+            {
+                $name = $row['Tables_in_'.$parameters['dbname']];
+                $ret[] = $name;
+            }
+            return $ret;
+        }
+        catch(\Exception $e)
+        {
+            return array();
+        }
+    }
+    
+    /**
+     * Retrieve a list of columns for the given connection parameters
+     * @param array $parameters The connection parameters
+     * @param string $sql_driver The SQL driver to use
+     * @param string $table The SQL table to work with
+     * @return array The found column, empty if an error occured
+     */
+    public function getColumns($parameters, $sql_driver, $table)
+    {
+        $cm = new \OC\DB\ConnectionFactory();
+        try {
+            $conn = $cm -> getConnection($sql_driver, $parameters);
+            $platform = $conn -> getDatabasePlatform();
+            $query = $platform -> getListTableColumnsSQL($table);
+            $result = $conn -> executeQuery($query);
+            $ret = array();
+            while($row = $result -> fetch())
+            {
+                $name = $row['Field'];
+                $ret[] = $name;
+            }
+            return $ret;
+        }
+        catch(\Exception $e)
+        {
+            return array();
+        } 
+    }
 
 
 }

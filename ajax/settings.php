@@ -61,53 +61,89 @@ if(isset($_POST['appname']) && ($_POST['appname'] === 'user_sql') && isset($_POS
     {
         // Save the settings for the given domain to the database
         case 'saveSettings':
-                foreach($params as $param)
+            $parameters = array('host' => $_POST['sql_hostname'],
+                'password' => $_POST['sql_password'],
+                'user' => $_POST['sql_username'],
+                'dbname' => $_POST['sql_database'],
+                'tablePrefix' => ''
+            );
+            
+            // Check if the table exists
+            if(!$helper->verifyTable($parameters, $_POST['sql_driver'], $_POST['sql_table']))
+            {
+                $response->setData(array('status' => 'error',
+                            'data' => array('message' => $l -> t('The selected SQL table '.$_POST['sql_table'].' does not exist!'))));
+                break;
+            }
+            
+            // Retrieve all column settings
+            $columns = array();
+            foreach($params as $param)
+            {
+                if(strpos($param, 'col_') === 0)
                 {
-                    // Special handling for checkbox fields
-                    if(isset($_POST[$param]))
+                    if(isset($_POST[$param]) && $_POST[$param] !== '')
+                        $columns[] = $_POST[$param];
+                }
+            }
+
+            // Check if the columns exist
+            $status = $helper->verifyColumns($parameters, $_POST['sql_driver'], $_POST['sql_table'], $columns);
+            if($status !== true)
+            {
+                $response->setData(array('status' => 'error',
+                            'data' => array('message' => $l -> t('The selected SQL column(s) do(es) not exist: '.$status))));
+                break;
+            }
+
+            // If we reach this point, all settings have been verified
+            foreach($params as $param)
+            {
+                // Special handling for checkbox fields
+                if(isset($_POST[$param]))
+                {
+                    if($param === 'set_strip_domain')
                     {
-                        if($param === 'set_strip_domain')
-                        {
-                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_strip_domain_'.$domain, 'true');
-                        } 
-                        elseif($param === 'set_allow_pwchange')
-                        {
-                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_allow_pwchange_'.$domain, 'true');
-                        }
-                        elseif($param === 'set_active_invert')
-                        {
-                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_active_invert_'.$domain, 'true');
-                        }
-                        elseif($param === 'set_enable_gethome')
-                        {
-                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_enable_gethome_'.$domain, 'true');
-                        }
-                        else
-                        {
-                            \OC::$server->getConfig()->setAppValue('user_sql', $param.'_'.$domain, $_POST[$param]);
-                        }
-                    } else
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_strip_domain_'.$domain, 'true');
+                    } 
+                    elseif($param === 'set_allow_pwchange')
                     {
-                        if($param === 'set_strip_domain')
-                        {
-                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_strip_domain_'.$domain, 'false');
-                        }
-                        elseif($param === 'set_allow_pwchange')
-                        {
-                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_allow_pwchange_'.$domain, 'false');
-                        }
-                        elseif($param === 'set_active_invert')
-                        {
-                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_active_invert_'.$domain, 'false');
-                        }
-                        elseif($param === 'set_enable_gethome')
-                        {
-                            \OC::$server->getConfig()->setAppValue('user_sql', 'set_enable_gethome_'.$domain, 'false');
-                        }
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_allow_pwchange_'.$domain, 'true');
+                    }
+                    elseif($param === 'set_active_invert')
+                    {
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_active_invert_'.$domain, 'true');
+                    }
+                    elseif($param === 'set_enable_gethome')
+                    {
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_enable_gethome_'.$domain, 'true');
+                    }
+                    else
+                    {
+                        \OC::$server->getConfig()->setAppValue('user_sql', $param.'_'.$domain, $_POST[$param]);
+                    }
+                } else
+                {
+                    if($param === 'set_strip_domain')
+                    {
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_strip_domain_'.$domain, 'false');
+                    }
+                    elseif($param === 'set_allow_pwchange')
+                    {
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_allow_pwchange_'.$domain, 'false');
+                    }
+                    elseif($param === 'set_active_invert')
+                    {
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_active_invert_'.$domain, 'false');
+                    }
+                    elseif($param === 'set_enable_gethome')
+                    {
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_enable_gethome_'.$domain, 'false');
                     }
                 }
-                $response->setData(array('status' => 'success',            
-                        'data' => array('message' => $l -> t('Application settings successfully stored.'))));
+            }
+            $response->setData(array('status' => 'success',            
+                    'data' => array('message' => $l -> t('Application settings successfully stored.'))));
         break;
 
         // Load the settings for a given domain
@@ -160,69 +196,56 @@ if(isset($_POST['appname']) && ($_POST['appname'] === 'user_sql') && isset($_POS
 
         // Get the autocompletion values for a column
         case 'getColumnAutocomplete':
-            $cm = new \OC\DB\ConnectionFactory();
-            $search = $_POST['request'];
-            $table = $_POST['sql_table'];
+            
+            
             $parameters = array('host' => $_POST['sql_hostname'],
                 'password' => $_POST['sql_password'],
                 'user' => $_POST['sql_username'],
                 'dbname' => $_POST['sql_database'],
                 'tablePrefix' => ''
             );
-            try {
-                $conn = $cm -> getConnection($_POST['sql_driver'], $parameters);
-                $platform = $conn -> getDatabasePlatform();
-                $query = $platform -> getListTableColumnsSQL($table);
-                $result = $conn -> executeQuery($query);
-                $ret = array();
-                while($row = $result -> fetch())
-                {
-                    $name = $row['Field'];
-                    if(($search === '') || ($search === 'search') || (strpos($name, $search) === 0))
-                    {
-                        $ret[] = array('label' => $name,
-                                       'value' => $name);
-                    }
-                }
-                $response -> setData($ret);
-            }
-            catch(\Exception $e)
+            
+            if($helper->verifyTable($parameters, $_POST['sql_driver'], $_POST['sql_table']))
+                $columns = $helper->getColumns($parameters, $_POST['sql_driver'], $_POST['sql_table']);
+            else
+                $columns = array();
+            
+            $search = $_POST['request'];
+            $ret = array();
+
+            foreach($columns as $name)
             {
-                $response->setData(array());
+                if(($search === '') || ($search === 'search') || (strpos($name, $search) === 0))
+                {
+                    $ret[] = array('label' => $name,
+                                   'value' => $name);
+                }
             }
+            $response -> setData($ret);
         break;
 
         // Get the autocompletion values for a table
         case 'getTableAutocomplete':
-            $cm = new \OC\DB\ConnectionFactory();
-            $search = $_POST['request'];
             $parameters = array('host' => $_POST['sql_hostname'],
                 'password' => $_POST['sql_password'],
                 'user' => $_POST['sql_username'],
                 'dbname' => $_POST['sql_database'],
                 'tablePrefix' => ''
             );
-            try {
-                $conn = $cm -> getConnection($_POST['sql_driver'], $parameters);
-                $platform = $conn -> getDatabasePlatform();
-                $query = $platform -> getListTablesSQL();
-                $result = $conn -> executeQuery($query);
-                $ret = array();
-                while($row = $result -> fetch())
-                {
-                    $name = $row['Tables_in_'.$_POST['sql_database']];
-                    if(($search === '') || ($search === 'search') || (strpos($name, $search) === 0))
-                    {
-                        $ret[] = array('label' => $name,
-                                       'value' => $name);
-                    }
-                }
-                $response -> setData($ret);
-            }
-            catch(\Exception $e)
+
+            $tables = $helper->getTables($parameters, $_POST['sql_driver']);
+
+            $search = $_POST['request'];
+            $ret = array();
+            foreach($tables as $name)
             {
-                $response->setData(array());
+                if(($search === '') || ($search === 'search') || (strpos($name, $search) === 0))
+                {
+                    $ret[] = array('label' => $name,
+                                   'value' => $name);
+                }
             }
+            $response -> setData($ret);
         break;
     }
 
