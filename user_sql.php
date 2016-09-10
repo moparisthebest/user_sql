@@ -37,6 +37,7 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
     protected $settings;
     protected $helper;
     protected $session_cache_name;
+    protected $ocConfig;
 
     /**
      * The default constructor. It loads the settings for the given domain
@@ -52,6 +53,7 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         $this -> helper = new \OCA\user_sql\lib\Helper();
         $domain = \OC::$server->getRequest()->getServerHost();
         $this -> settings = $this -> helper -> loadSettingsForDomain($domain);
+        $this -> ocConfig = \OC::$server->getConfig();
         $this -> helper -> connectToDb($this -> settings);        
         $this -> session_cache_name = 'USER_SQL_CACHE';
         return false;
@@ -86,17 +88,17 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
             return false;
         }
         $newMail = $row[$this -> settings['col_email']];
-        $currMail = \OCP\Config::getUserValue($ocUid, 'settings', 'email', '');
+        $currMail = $this->ocConfig->getUserValue($ocUid, 'settings', 'email', '');
         
         switch($this -> settings['set_mail_sync_mode'])
         {
             case 'initial':
                 if($currMail === '')
-                    \OCP\Config::setUserValue($ocUid, 'settings', 'email', $newMail);
+                    $this->ocConfig->setUserValue($ocUid, 'settings', 'email', $newMail);
                 break;
             case 'forcesql':
                 if($currMail !== $newMail)
-                    \OCP\Config::setUserValue($ocUid, 'settings', 'email', $newMail);
+                    $this->ocConfig->setUserValue($ocUid, 'settings', 'email', $newMail);
                 break;
             case 'forceoc':
                 if(($currMail !== '') && ($currMail !== $newMail))
