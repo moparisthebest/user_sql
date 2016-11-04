@@ -6,7 +6,7 @@
        <licence>AGPL</licence>
        <author>Andreas Boehler &lt;dev (at) aboehler 
 (dot) at &gt;</author>
-       <version>2.3</version>
+       <version>2.3.0</version>
        <shipped>false</shipped>
        <namespace>user_sql</namespace>
        <types>
