@@ -576,6 +576,18 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
             $password .= ':' . $salt;
 		}
 
+        elseif($this-> settings['set_crypt_type'] === 'hmacmd5')
+        {
+            require_once('dovecot_hmacmd5.php');
+            $password = dovecot_hmacmd5($pw);
+        }
+        
+        elseif($this-> settings['set_crypt_type'] === 'crammd5')
+        {
+            require_once('dovecot_hmacmd5.php');
+            $password = dovecot_crammd5($pw);
+        }
+
 		elseif($this-> settings['set_crypt_type'] === 'ssha256')
 		{
 			$salted_password = base64_decode(preg_replace('/{SSHA256}/i','',$pw_db));
