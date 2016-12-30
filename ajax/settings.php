@@ -120,7 +120,7 @@ if(isset($_POST['appname']) && ($_POST['appname'] === 'user_sql') && isset($_POS
                     }
                     elseif($param === 'set_force_default_domain')
                     {
-                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_force_default_domain'.$domain, 'true');
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_force_default_domain_'.$domain, 'true');
                     }
                     else
                     {
@@ -146,7 +146,7 @@ if(isset($_POST['appname']) && ($_POST['appname'] === 'user_sql') && isset($_POS
                     }
                     elseif($param === 'set_force_default_domain')
                     {
-                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_force_default_domain'.$domain, 'false');
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_force_default_domain_'.$domain, 'false');
                     }
                 }
             }
