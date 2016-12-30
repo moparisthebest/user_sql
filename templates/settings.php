@@ -119,6 +119,12 @@ $cfgClass = $ocVersion >= 7 ? 'section' : 'personalblock';
                 <em><?php p($l -> t('Append this string, e.g. a domain name, to each user name. The @-sign is automatically inserted.')); ?></em>
             </p>
             
+            <p><label for="set_force_default_domain"><?php p($l -> t('Force appending of default domain')); ?></label><input type="checkbox" id="set_force_default_domain" name="set_force_default_domain" value="1"><?php
+            if($_['set_force_default_domain'])
+                p(' checked');
+            ?> /><br>
+            <em><?php p($l -> t("Always append the default domain, even if the user entered a domain name")); ?></em></p>
+            
             <p><label for="set_strip_domain"><?php p($l -> t('Strip Domain Part from Username')); ?></label><input type="checkbox" id="set_strip_domain" name="set_strip_domain" value="1"<?php
             if($_['set_strip_domain'])
                 p(' checked');

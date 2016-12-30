@@ -118,6 +118,10 @@ if(isset($_POST['appname']) && ($_POST['appname'] === 'user_sql') && isset($_POS
                     {
                         \OC::$server->getConfig()->setAppValue('user_sql', 'set_enable_gethome_'.$domain, 'true');
                     }
+                    elseif($param === 'set_force_default_domain')
+                    {
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_force_default_domain'.$domain, 'true');
+                    }
                     else
                     {
                         \OC::$server->getConfig()->setAppValue('user_sql', $param.'_'.$domain, $_POST[$param]);
@@ -139,6 +143,10 @@ if(isset($_POST['appname']) && ($_POST['appname'] === 'user_sql') && isset($_POS
                     elseif($param === 'set_enable_gethome')
                     {
                         \OC::$server->getConfig()->setAppValue('user_sql', 'set_enable_gethome_'.$domain, 'false');
+                    }
+                    elseif($param === 'set_force_default_domain')
+                    {
+                        \OC::$server->getConfig()->setAppValue('user_sql', 'set_force_default_domain'.$domain, 'false');
                     }
                 }
             }

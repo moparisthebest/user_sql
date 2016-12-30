@@ -59,6 +59,7 @@ class Helper {
             'set_active_invert',
             'set_allow_pwchange',
             'set_default_domain',
+            'set_force_default_domain',
             'set_strip_domain',
             'set_crypt_type',
             'set_mail_sync_mode',

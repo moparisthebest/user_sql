@@ -130,6 +130,11 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
         if($this -> settings['set_default_domain'] !== '')
         {
             \OCP\Util::writeLog('OC_USER_SQL', "Append default domain: ".$this -> settings['set_default_domain'], \OCP\Util::DEBUG);
+            if($this -> settings['set_force_default_domain'] === 'true')
+            {
+                $uid = explode("@", $uid);
+                $uid = $uid[0];
+            }
             if(strpos($uid, '@') === false)
             {
                 $uid .= "@" . $this -> settings['set_default_domain'];
