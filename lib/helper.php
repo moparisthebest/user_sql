@@ -326,23 +326,31 @@ class Helper {
     public function getColumns($parameters, $sql_driver, $table)
     {
         $cm = new \OC\DB\ConnectionFactory();
-        try {
-            $conn = $cm -> getConnection($sql_driver, $parameters);
-            $platform = $conn -> getDatabasePlatform();
-            $query = $platform -> getListTableColumnsSQL($table);
-            $result = $conn -> executeQuery($query);
-            $ret = array();
-            while($row = $result -> fetch())
-            {
-                $name = $row['Field'];
-                $ret[] = $name;
-            }
-            return $ret;
-        }
-        catch(\Exception $e)
-        {
-            return array();
-        } 
+         try {
+             $conn = $cm -> getConnection($sql_driver, $parameters);
+             $platform = $conn -> getDatabasePlatform();
+             $query = $platform -> getListTablesSQL();
+             $result = $conn -> executeQuery($query);
+             $ret = array();
+             while($row = $result -> fetch())
+             {
+                 $name = $row['Tables_in_'.$parameters['dbname']];
+                 $ret[] = $name;
+             }
+             $query = $platform -> getListViewsSQL($parameters['dbname']);
+             $result = $conn -> executeQuery($query);
+             $ret = array();
+             while($row = $result -> fetch())
+             {
+                 $name = $row['TABLE_NAME'];
+                 $ret[] = $name;
+             }
+             return $ret;
+         }
+         catch(\Exception $e)
+         {
+             return array();
+         } 
     }
 
 
