@@ -280,7 +280,7 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
 			$salt = $this -> helper -> runQuery('getRedmineSalt', array('uid' => $uid));
 			if(!$salt)
 				return false;
-			$enc_password = hash('sha512', hash('whirlpool', $password.$salt));
+			$enc_password = hash('sha512', hash('whirlpool', $password.$salt['salt']));
         } else
         {
             $enc_password = $this -> pacrypt($password, $old_password);
@@ -341,7 +341,7 @@ class OC_USER_SQL extends \OC_User_Backend implements \OCP\IUserBackend, \OCP\Us
 			$salt = $this -> helper -> runQuery('getRedmineSalt', array('uid' => $uid));
 			if(!$salt)
 				return false;
-			$ret = hash('sha512', hash('whirlpool', $password.$salt)) === $db_pass;
+			$ret = hash('sha512', hash('whirlpool', $password.$salt['salt'])) === $db_pass;
         } else
         {
             $ret = $this -> pacrypt($password, $db_pass) === $db_pass;
